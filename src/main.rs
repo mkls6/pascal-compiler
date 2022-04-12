@@ -1,21 +1,28 @@
+mod io;
+mod lexer;
 mod token;
 
+use io::CharReader;
+use std::env;
+use std::fs::File;
+use std::io::{BufReader, Read};
+
 fn main() {
-    let my_integer = token::Integer::new(5);
-    println!("My integer {}", my_integer);
+    let args: Vec<String> = env::args().collect();
 
-    let my_real = token::Real::new(3.25);
-    println!("My real {}", my_real);
+    if args.len() != 2 {
+        panic!("Usage: pascal-compiler source.pas");
+    }
 
-    let another_real = token::Real::from_string(String::from("44.25")).unwrap();
-    println!("Another real {}", another_real);
-    println!("String representation: {}", another_real.as_string());
+    let mut reader = BufReader::new(File::open(&args[1]).expect("Failed to open source file"));
+    let mut text = String::new();
 
-    let my_boolean = token::Boolean::from_string(String::from("true")).unwrap();
-    println!("My boolean {}", my_boolean);
+    // TODO: read file line by line internally
+    let _n = reader.read_to_string(&mut text);
 
-    let my_string = token::Str::from_string(String::from("MyString")).unwrap();
-    println!("My string {}", my_string);
+    let char_reader = CharReader::new(&text);
 
-    println!("Actual value: {}", my_boolean.as_value())
+    for c in char_reader {
+        print!("{}", c);
+    }
 }
