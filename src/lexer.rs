@@ -1,3 +1,4 @@
+use crate::error::LexicalError;
 use crate::io::CharReader;
 use crate::token::Token;
 use std::iter::Iterator;
@@ -6,11 +7,6 @@ use std::iter::Iterator;
 pub struct Lexer<'a> {
     chars: CharReader<'a>,
     current_token: String,
-}
-
-#[allow(dead_code)]
-struct LexicalError {
-    description: String,
 }
 
 #[allow(dead_code)]
@@ -45,12 +41,6 @@ impl<'a> Lexer<'a> {
     }
 
     fn number(&mut self) -> Result<Token, LexicalError> {
-        // let num: String = self
-        //     .chars
-        //     .by_ref()
-        //     .take_while(|c: &char| c.is_digit(10))
-        //     .collect();
-
         let mut num = String::new();
 
         loop {
@@ -91,7 +81,7 @@ impl<'a> Lexer<'a> {
 }
 
 impl<'a> Iterator for Lexer<'a> {
-    type Item = Token;
+    type Item = Result<Token, LexicalError>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.skip_ws();
@@ -100,17 +90,23 @@ impl<'a> Iterator for Lexer<'a> {
             Some(ch) => match ch {
                 '0'..='9' => self.number(),
                 '+' | '-' => self.operator(),
-                _ => Err(LexicalError {
-                    description: String::from("Unsupported characted in input stream"),
-                }),
+                _ => {
+                    self.chars.by_ref().next();
+
+                    Err(LexicalError {
+                        description: String::from(format!(
+                            "Unsupported character '{}' in input stream",
+                            ch
+                        )),
+                    })
+                }
             },
             None => Ok(Token::EOF),
         };
 
         match token {
             Ok(Token::EOF) => None,
-            Ok(t) => Some(t),
-            _ => None,
+            _ => Some(token),
         }
     }
 }
