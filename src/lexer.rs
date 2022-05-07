@@ -130,6 +130,21 @@ impl<'a> Lexer<'a> {
                 '.' => Ok(Token::Period),
                 '(' => Ok(Token::LBrace),
                 ')' => Ok(Token::RBrace),
+                '\'' => {
+                    // Read chars until string literal is closed
+                    let literal: String = self
+                        .chars
+                        .by_ref()
+                        .take_while(|x: &char| x != &'\'')
+                        .collect();
+
+                    match self.chars.current_char() {
+                        Some('\'') => Ok(Token::StringLiteral(literal)),
+                        _ => Err(LexicalError {
+                            description: String::from("Invalid string literal"),
+                        }),
+                    }
+                }
                 _ => Err(LexicalError {
                     description: String::from(format!(
                         "Unsupported symbol {}",

@@ -4,6 +4,7 @@ use std::fmt;
 pub enum Token {
     Integer(i32),
     Identifier(String),
+    StringLiteral(String),
     IntegerKeyword,
     ProgramKeyword,
     VarKeyword,
@@ -45,6 +46,7 @@ impl fmt::Display for Token {
             Token::Period => write!(f, "Period sign"),
             Token::LBrace => write!(f, "("),
             Token::RBrace => write!(f, ")"),
+            Token::StringLiteral(s) => write!(f, "String literal '{}'", s),
         }
     }
 }

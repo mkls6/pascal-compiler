@@ -21,7 +21,6 @@ impl<'a> CharReader<'a> {
         self.current_char
     }
 
-    #[allow(dead_code)]
     pub fn peek(&mut self) -> Option<&char> {
         self.chars.peek()
     }
