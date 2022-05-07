@@ -14,6 +14,9 @@ pub enum Token {
     MulOp,
     DivOp,
     ModOp,
+    AssignOp,
+    Colon,
+    Semicolon,
     EOF,
 }
 
@@ -33,6 +36,9 @@ impl fmt::Display for Token {
             Token::ProgramKeyword => write!(f, "'PROGRAM' keyword"),
             Token::IntegerKeyword => write!(f, "'INTEGER' keyword"),
             Token::VarKeyword => write!(f, "'VAR' keyword"),
+            Token::AssignOp => write!(f, "'Assign (:=)' operator"),
+            Token::Colon => write!(f, "Colon"),
+            Token::Semicolon => write!(f, "Semicolon"),
         }
     }
 }

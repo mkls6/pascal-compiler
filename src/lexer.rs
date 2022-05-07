@@ -104,6 +104,13 @@ impl<'a> Lexer<'a> {
                 '+' => Ok(Token::PlusOp),
                 '-' => Ok(Token::MinusOp),
                 '*' => Ok(Token::MulOp),
+                ':' => match self.chars.by_ref().peek() {
+                    Some(ch) if ch == &'=' => {
+                        self.chars.by_ref().next();
+                        Ok(Token::AssignOp)
+                    }
+                    _ => Ok(Token::Colon),
+                },
                 _ => Err(LexicalError {
                     description: String::from("Invalid operator"),
                 }),
@@ -124,7 +131,11 @@ impl<'a> Iterator for Lexer<'a> {
         let token = match self.chars.by_ref().current_char() {
             Some(ch) => match ch {
                 '0'..='9' => self.number(),
-                '+' | '-' | '*' => self.operator(),
+                ';' => {
+                    self.chars.next();
+                    Ok(Token::Semicolon)
+                }
+                '+' | '-' | '*' | ':' => self.operator(),
                 _ if ch.is_alphanumeric() => self.maybe_keyword(),
                 _ => {
                     self.chars.by_ref().next();
