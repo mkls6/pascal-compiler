@@ -1,6 +1,5 @@
 use std::fmt;
 
-#[allow(dead_code)]
 pub struct LexicalError {
     pub description: String,
 }

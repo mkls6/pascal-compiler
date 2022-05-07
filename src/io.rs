@@ -17,7 +17,6 @@ impl<'a> CharReader<'a> {
         }
     }
 
-    #[allow(dead_code)]
     pub fn current_char(&self) -> Option<char> {
         self.current_char
     }

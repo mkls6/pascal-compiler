@@ -3,21 +3,13 @@ use crate::io::CharReader;
 use crate::token::Token;
 use std::iter::Iterator;
 
-#[allow(dead_code)]
 pub struct Lexer<'a> {
     chars: CharReader<'a>,
-    current_token: String,
 }
 
-#[allow(dead_code)]
 impl<'a> Lexer<'a> {
     pub fn new(chars: CharReader<'a>) -> Self {
-        let current_token = String::new();
-
-        Self {
-            chars,
-            current_token,
-        }
+        Self { chars }
     }
 
     fn skip_ws(&mut self) {
