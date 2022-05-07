@@ -38,6 +38,21 @@ impl<'a> Lexer<'a> {
         loop {
             match self.chars.by_ref().current_char() {
                 Some(ch) if ch.is_digit(10) => num.push(ch),
+                Some(ch) if ch.is_whitespace() => break,
+                Some(ch) if ch.is_alphanumeric() => {
+                    // Consume everything until whitespace or EOF
+                    num.push(ch);
+
+                    while let Some(ch) = self.chars.next() {
+                        if ch.is_whitespace() {
+                            break;
+                        } else {
+                            num.push(ch);
+                        }
+
+                        break;
+                    }
+                }
                 _ => break,
             }
 
@@ -47,9 +62,9 @@ impl<'a> Lexer<'a> {
         let parsed = num.parse::<i32>();
 
         match parsed {
-            Ok(i) => Ok(Token::INTEGER(i)),
+            Ok(i) => Ok(Token::Integer(i)),
             _ => Err(LexicalError {
-                description: String::from("Failed to parse int"),
+                description: String::from(format!("Invalid int literal {}", num)),
             }),
         }
     }
@@ -69,12 +84,14 @@ impl<'a> Lexer<'a> {
             }
 
             match s.to_lowercase().as_str() {
-                "div" => Ok(Token::DIV),
-                "mod" => Ok(Token::MOD),
-                "program" => Ok(Token::PROGRAM),
-                "begin" => Ok(Token::BEGIN),
-                "end" => Ok(Token::END),
-                _ => Ok(Token::IDENTIFIER(s)),
+                "div" => Ok(Token::DivOp),
+                "mod" => Ok(Token::ModOp),
+                "program" => Ok(Token::ProgramKeyword),
+                "begin" => Ok(Token::BeginKeyword),
+                "end" => Ok(Token::EndKeyword),
+                "integer" => Ok(Token::IntegerKeyword),
+                "var" => Ok(Token::VarKeyword),
+                _ => Ok(Token::Identifier(s)),
             }
         }
     }
@@ -84,9 +101,9 @@ impl<'a> Lexer<'a> {
             Ok(Token::EOF)
         } else {
             match self.chars.current_char().unwrap() {
-                '+' => Ok(Token::PLUS),
-                '-' => Ok(Token::MINUS),
-                '*' => Ok(Token::MUL),
+                '+' => Ok(Token::PlusOp),
+                '-' => Ok(Token::MinusOp),
+                '*' => Ok(Token::MulOp),
                 _ => Err(LexicalError {
                     description: String::from("Invalid operator"),
                 }),
