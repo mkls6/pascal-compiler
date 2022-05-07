@@ -16,6 +16,9 @@ pub enum Token {
     ModOp,
     AssignOp,
     Colon,
+    Period,
+    LBrace,
+    RBrace,
     Semicolon,
     EOF,
 }
@@ -39,6 +42,9 @@ impl fmt::Display for Token {
             Token::AssignOp => write!(f, "'Assign (:=)' operator"),
             Token::Colon => write!(f, "Colon"),
             Token::Semicolon => write!(f, "Semicolon"),
+            Token::Period => write!(f, "Period sign"),
+            Token::LBrace => write!(f, "("),
+            Token::RBrace => write!(f, ")"),
         }
     }
 }

@@ -120,6 +120,28 @@ impl<'a> Lexer<'a> {
         self.chars.by_ref().next();
         op
     }
+
+    fn symbol(&mut self) -> Result<Token, LexicalError> {
+        let sym = if self.chars.current_char().is_none() {
+            Ok(Token::EOF)
+        } else {
+            match self.chars.current_char().unwrap() {
+                ';' => Ok(Token::Semicolon),
+                '.' => Ok(Token::Period),
+                '(' => Ok(Token::LBrace),
+                ')' => Ok(Token::RBrace),
+                _ => Err(LexicalError {
+                    description: String::from(format!(
+                        "Unsupported symbol {}",
+                        self.chars.current_char().unwrap()
+                    )),
+                }),
+            }
+        };
+
+        self.chars.next();
+        sym
+    }
 }
 
 impl<'a> Iterator for Lexer<'a> {
@@ -131,22 +153,9 @@ impl<'a> Iterator for Lexer<'a> {
         let token = match self.chars.by_ref().current_char() {
             Some(ch) => match ch {
                 '0'..='9' => self.number(),
-                ';' => {
-                    self.chars.next();
-                    Ok(Token::Semicolon)
-                }
                 '+' | '-' | '*' | ':' => self.operator(),
                 _ if ch.is_alphanumeric() => self.maybe_keyword(),
-                _ => {
-                    self.chars.by_ref().next();
-
-                    Err(LexicalError {
-                        description: String::from(format!(
-                            "Unsupported character '{}' in input stream",
-                            ch
-                        )),
-                    })
-                }
+                _ => self.symbol(),
             },
             None => Ok(Token::EOF),
         };
