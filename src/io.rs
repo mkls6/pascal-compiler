@@ -52,6 +52,10 @@ impl CharReader {
             _ => None,
         }
     }
+
+    pub fn position(&self) -> (usize, usize) {
+        (self.line_num, self.col_num + 1)
+    }
 }
 
 impl Iterator for CharReader {

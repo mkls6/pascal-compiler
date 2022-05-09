@@ -69,18 +69,29 @@ impl Lexer {
 
             match parsed {
                 Ok(f) => Ok(Token::Real(f)),
-                _ => Err(LexicalError {
-                    description: String::from(format!("Invalid real literal {}", num)),
-                }),
+                _ => {
+                    let pos = self.chars.position();
+                    Err(LexicalError::new(
+                        String::from(format!("Invalid real literal {}", num)),
+                        pos.0,
+                        pos.1,
+                    ))
+                }
             }
         } else {
             let parsed = num.parse::<i32>();
 
             match parsed {
                 Ok(i) => Ok(Token::Integer(i)),
-                _ => Err(LexicalError {
-                    description: String::from(format!("Invalid int literal {}", num)),
-                }),
+                _ => {
+                    let pos = self.chars.position();
+
+                    Err(LexicalError::new(
+                        String::from(format!("Invalid int literal {}", num)),
+                        pos.0,
+                        pos.1,
+                    ))
+                }
             }
         }
     }
@@ -128,9 +139,15 @@ impl Lexer {
                     }
                     _ => Ok(Token::Colon),
                 },
-                _ => Err(LexicalError {
-                    description: String::from("Invalid operator"),
-                }),
+                _ => {
+                    let pos = self.chars.position();
+
+                    Err(LexicalError::new(
+                        String::from("Invalid operator"),
+                        pos.0,
+                        pos.1,
+                    ))
+                }
             }
         };
 
@@ -157,17 +174,29 @@ impl Lexer {
 
                     match self.chars.current_char() {
                         Some('\'') => Ok(Token::StringLiteral(literal)),
-                        _ => Err(LexicalError {
-                            description: String::from("Invalid string literal"),
-                        }),
+                        _ => {
+                            let pos = self.chars.position();
+
+                            Err(LexicalError::new(
+                                String::from("Invalid string literal"),
+                                pos.0,
+                                pos.1,
+                            ))
+                        }
                     }
                 }
-                _ => Err(LexicalError {
-                    description: String::from(format!(
-                        "Unsupported symbol {}",
-                        self.chars.current_char().unwrap()
-                    )),
-                }),
+                _ => {
+                    let pos = self.chars.position();
+
+                    Err(LexicalError::new(
+                        String::from(format!(
+                            "Unsupported symbol {}",
+                            self.chars.current_char().unwrap()
+                        )),
+                        pos.0,
+                        pos.1,
+                    ))
+                }
             }
         };
 
