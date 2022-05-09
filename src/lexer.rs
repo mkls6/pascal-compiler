@@ -34,10 +34,15 @@ impl Lexer {
 
     fn number(&mut self) -> Result<Token, LexicalError> {
         let mut num = String::new();
+        let mut is_real = false;
 
         loop {
             match self.chars.by_ref().current_char() {
                 Some(ch) if ch.is_digit(10) => num.push(ch),
+                Some(ch) if ch == '.' => {
+                    num.push(ch);
+                    is_real = true;
+                }
                 Some(ch) if ch.is_whitespace() => break,
                 Some(ch) if ch.is_alphanumeric() => {
                     // Consume everything until whitespace or EOF
@@ -59,13 +64,24 @@ impl Lexer {
             self.chars.by_ref().next();
         }
 
-        let parsed = num.parse::<i32>();
+        if is_real {
+            let parsed = num.parse::<f32>();
 
-        match parsed {
-            Ok(i) => Ok(Token::Integer(i)),
-            _ => Err(LexicalError {
-                description: String::from(format!("Invalid int literal {}", num)),
-            }),
+            match parsed {
+                Ok(f) => Ok(Token::Real(f)),
+                _ => Err(LexicalError {
+                    description: String::from(format!("Invalid real literal {}", num)),
+                }),
+            }
+        } else {
+            let parsed = num.parse::<i32>();
+
+            match parsed {
+                Ok(i) => Ok(Token::Integer(i)),
+                _ => Err(LexicalError {
+                    description: String::from(format!("Invalid int literal {}", num)),
+                }),
+            }
         }
     }
 
@@ -90,6 +106,7 @@ impl Lexer {
                 "begin" => Ok(Token::BeginKeyword),
                 "end" => Ok(Token::EndKeyword),
                 "integer" => Ok(Token::IntegerKeyword),
+                "real" => Ok(Token::RealKeyword),
                 "var" => Ok(Token::VarKeyword),
                 _ => Ok(Token::Identifier(s)),
             }

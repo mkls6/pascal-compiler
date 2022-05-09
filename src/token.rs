@@ -6,6 +6,8 @@ pub enum Token {
     Identifier(String),
     StringLiteral(String),
     IntegerKeyword,
+    RealKeyword,
+    Real(f32),
     ProgramKeyword,
     VarKeyword,
     BeginKeyword,
@@ -47,6 +49,8 @@ impl fmt::Display for Token {
             Token::LBrace => write!(f, "("),
             Token::RBrace => write!(f, ")"),
             Token::StringLiteral(s) => write!(f, "String literal '{}'", s),
+            Token::Real(r) => write!(f, "Real literal '{}'", r),
+            Token::RealKeyword => write!(f, "REAL keyword"),
         }
     }
 }
