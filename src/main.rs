@@ -22,15 +22,24 @@ fn main() {
     // TODO: read file line by line internally
     // let _n = reader.read_to_string(&mut text);
 
-    let char_reader = CharReader::new(String::from(&args[1]));
-    let lexer = Lexer::new(char_reader);
+    let filename = &args[1];
 
-    println!("Parsing tokens…");
+    let char_reader = CharReader::new(String::from(filename));
+    match char_reader {
+        Ok(reader) => {
+            let lexer = Lexer::new(reader);
 
-    for token in lexer {
-        match token {
-            Ok(t) => println!("Parsed token {}", t),
-            Err(e) => println!("{}", e),
+            println!("Parsing tokens…");
+
+            for token in lexer {
+                match token {
+                    Ok(t) => println!("Parsed token {}", t),
+                    Err(e) => println!("{}", e),
+                }
+            }
+        }
+        Err(e) => {
+            eprintln!("Failed to open file {}: {}", filename, e);
         }
     }
 }

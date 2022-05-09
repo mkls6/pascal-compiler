@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::{BufRead, BufReader, Lines};
+use std::io::{BufRead, BufReader, Error, Lines};
 
 pub struct CharReader {
     current_char: Option<char>,
@@ -10,8 +10,10 @@ pub struct CharReader {
 }
 
 impl CharReader {
-    pub fn new(filename: String) -> Self {
-        let reader = BufReader::new(File::open(filename).expect("Failed to open source file"));
+    pub fn new(filename: String) -> Result<Self, Error> {
+        let file = File::open(filename)?;
+
+        let reader = BufReader::new(file);
         let mut lines = reader.lines();
 
         let chars: Option<Vec<char>> = match lines.by_ref().next() {
@@ -38,7 +40,7 @@ impl CharReader {
             line_num,
             col_num,
         };
-        reader
+        Ok(reader)
     }
 
     pub fn current_char(&self) -> Option<char> {
