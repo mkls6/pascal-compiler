@@ -1,20 +1,44 @@
-use std::iter::Peekable;
-use std::str::Chars;
+use std::fs::File;
+use std::io::{BufRead, BufReader, Lines};
 
-pub struct CharReader<'a> {
+pub struct CharReader {
     current_char: Option<char>,
-    chars: Peekable<Chars<'a>>,
+    chars: Option<Vec<char>>,
+    lines: Lines<BufReader<File>>,
+    line_num: usize,
+    col_num: usize,
 }
 
-impl<'a> CharReader<'a> {
-    pub fn new(source: &'a str) -> Self {
-        let mut chars = source.chars().peekable();
-        let current_char = chars.next();
+impl CharReader {
+    pub fn new(filename: String) -> Self {
+        let reader = BufReader::new(File::open(filename).expect("Failed to open source file"));
+        let mut lines = reader.lines();
 
-        Self {
+        let chars: Option<Vec<char>> = match lines.by_ref().next() {
+            Some(Ok(s)) => {
+                let mut c: Vec<char> = s.chars().collect();
+                c.push('\n');
+                Some(c)
+            }
+            _ => None,
+        };
+
+        let line_num = 1;
+        let col_num = 0;
+
+        let current_char = match chars.as_ref() {
+            Some(v) => Some(v[0]),
+            _ => None,
+        };
+
+        let reader = Self {
             current_char,
             chars,
-        }
+            lines,
+            line_num,
+            col_num,
+        };
+        reader
     }
 
     pub fn current_char(&self) -> Option<char> {
@@ -22,15 +46,53 @@ impl<'a> CharReader<'a> {
     }
 
     pub fn peek(&mut self) -> Option<&char> {
-        self.chars.peek()
+        match self.chars.as_ref() {
+            Some(v) if v.len() == self.col_num + 1 => None,
+            Some(v) => Some(&v[self.col_num + 1]),
+            _ => None,
+        }
     }
 }
 
-impl<'a> Iterator for CharReader<'a> {
+impl Iterator for CharReader {
     type Item = char;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.current_char = self.chars.next();
+        match self.chars.as_ref() {
+            // End of current line => we need to pass \n and read next line
+            Some(v) if self.col_num + 1 == v.len() => {
+                self.line_num += 1;
+                self.col_num = 0;
+
+                // Loop until non-empty line or EOF
+                loop {
+                    match self.lines.by_ref().next() {
+                        Some(Ok(s)) if s.len() > 0 => {
+                            let mut c: Vec<char> = s.chars().collect();
+                            c.push('\n');
+
+                            self.current_char = Some(c[0]);
+                            self.chars = Some(c);
+                            break;
+                        }
+                        None => {
+                            self.chars = None;
+                            self.current_char = None;
+                            break;
+                        }
+                        _ => (),
+                    };
+                }
+            }
+            Some(v) => {
+                self.col_num += 1;
+                self.current_char = Some(v[self.col_num]);
+            }
+            _ => {
+                self.current_char = None;
+            }
+        };
+
         self.current_char
     }
 }

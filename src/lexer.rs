@@ -3,12 +3,12 @@ use crate::io::CharReader;
 use crate::token::Token;
 use std::iter::Iterator;
 
-pub struct Lexer<'a> {
-    chars: CharReader<'a>,
+pub struct Lexer {
+    chars: CharReader,
 }
 
-impl<'a> Lexer<'a> {
-    pub fn new(chars: CharReader<'a>) -> Self {
+impl Lexer {
+    pub fn new(chars: CharReader) -> Self {
         Self { chars }
     }
 
@@ -159,7 +159,7 @@ impl<'a> Lexer<'a> {
     }
 }
 
-impl<'a> Iterator for Lexer<'a> {
+impl Iterator for Lexer {
     type Item = Result<Token, LexicalError>;
 
     fn next(&mut self) -> Option<Self::Item> {
