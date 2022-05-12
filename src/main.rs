@@ -1,6 +1,7 @@
 mod error;
 mod io;
 mod lexer;
+mod syntax_analyzer;
 mod token;
 
 use io::CharReader;
