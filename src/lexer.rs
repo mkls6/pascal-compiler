@@ -1,4 +1,4 @@
-use crate::error::LexicalError;
+use crate::error::CompilerError;
 use crate::io::CharReader;
 use crate::token::Token;
 use std::iter::Iterator;
@@ -32,7 +32,7 @@ impl Lexer {
         }
     }
 
-    fn number(&mut self) -> Result<Token, LexicalError> {
+    fn number(&mut self) -> Result<Token, CompilerError> {
         let mut num = String::new();
         let mut is_real = false;
 
@@ -71,7 +71,7 @@ impl Lexer {
                 Ok(f) => Ok(Token::Real(f)),
                 _ => {
                     let pos = self.chars.position();
-                    Err(LexicalError::new(
+                    Err(CompilerError::lexical(
                         String::from(format!("Invalid real literal {}", num)),
                         pos.0,
                         pos.1,
@@ -86,7 +86,7 @@ impl Lexer {
                 _ => {
                     let pos = self.chars.position();
 
-                    Err(LexicalError::new(
+                    Err(CompilerError::lexical(
                         String::from(format!("Invalid int literal {}", num)),
                         pos.0,
                         pos.1,
@@ -96,7 +96,7 @@ impl Lexer {
         }
     }
 
-    fn maybe_keyword(&mut self) -> Result<Token, LexicalError> {
+    fn maybe_keyword(&mut self) -> Result<Token, CompilerError> {
         if self.chars.by_ref().current_char().is_none() {
             Ok(Token::EOF)
         } else {
@@ -124,7 +124,7 @@ impl Lexer {
         }
     }
 
-    fn operator(&mut self) -> Result<Token, LexicalError> {
+    fn operator(&mut self) -> Result<Token, CompilerError> {
         let op = if self.chars.current_char().is_none() {
             Ok(Token::EOF)
         } else {
@@ -142,7 +142,7 @@ impl Lexer {
                 _ => {
                     let pos = self.chars.position();
 
-                    Err(LexicalError::new(
+                    Err(CompilerError::lexical(
                         String::from("Invalid operator"),
                         pos.0,
                         pos.1,
@@ -155,7 +155,7 @@ impl Lexer {
         op
     }
 
-    fn symbol(&mut self) -> Result<Token, LexicalError> {
+    fn symbol(&mut self) -> Result<Token, CompilerError> {
         let sym = if self.chars.current_char().is_none() {
             Ok(Token::EOF)
         } else {
@@ -177,7 +177,7 @@ impl Lexer {
                         _ => {
                             let pos = self.chars.position();
 
-                            Err(LexicalError::new(
+                            Err(CompilerError::lexical(
                                 String::from("Invalid string literal"),
                                 pos.0,
                                 pos.1,
@@ -188,7 +188,7 @@ impl Lexer {
                 _ => {
                     let pos = self.chars.position();
 
-                    Err(LexicalError::new(
+                    Err(CompilerError::lexical(
                         String::from(format!(
                             "Unsupported symbol {}",
                             self.chars.current_char().unwrap()
@@ -206,7 +206,7 @@ impl Lexer {
 }
 
 impl Iterator for Lexer {
-    type Item = Result<Token, LexicalError>;
+    type Item = Result<Token, CompilerError>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.skip_ws();
