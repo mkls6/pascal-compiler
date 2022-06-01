@@ -1,5 +1,6 @@
 use std::fmt;
 
+#[derive(Clone)]
 pub enum ErrorType {
     Lexical,
     Syntax,
@@ -16,6 +17,10 @@ impl fmt::Display for ErrorType {
     }
 }
 
+// TODO: don't use copy semantics
+// It's a hack to fix ownership problems
+// when checking current token in parser
+#[derive(Clone)]
 pub struct CompilerError {
     description: String,
     line: usize,
