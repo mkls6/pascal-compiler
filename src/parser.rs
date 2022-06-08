@@ -2,16 +2,17 @@ use crate::error::CompilerError;
 use crate::lexer::Lexer;
 use crate::syntax::*;
 use crate::token::Token;
+use std::iter::Peekable;
 
 pub struct Parser {
-    lexer: Lexer,
+    lexer: Peekable<Lexer>,
     current_token: Option<Result<Token, CompilerError>>,
 }
 
 impl Parser {
     pub fn new(lexer: Lexer) -> Self {
         let mut parser = Self {
-            lexer,
+            lexer: lexer.peekable(),
             current_token: None,
         };
 
@@ -152,6 +153,7 @@ impl Parser {
             )),
         }
     }
+
     fn parse_multiplicative_op(&mut self) -> Result<Option<MultiplicativeOp>, CompilerError> {
         let op = match &self.current_token {
             Some(Ok(Token::MulOp)) => {
