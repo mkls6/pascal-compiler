@@ -1,4 +1,5 @@
 use std::fmt;
+use std::fmt::Formatter;
 
 pub enum Factor {
     Integer(i32),
@@ -15,6 +16,16 @@ pub enum MultiplicativeOp {
     Mul,
     Div,
     Mod,
+}
+
+pub struct Identifier {
+    pub(crate) name: String
+    // TODO: type, usage, etc
+}
+
+pub struct VarAssignment {
+    pub(crate) name: Identifier,
+    pub(crate) value: Expression
 }
 
 pub struct Term {
@@ -106,6 +117,23 @@ impl fmt::Debug for SubExpression {
             .field("op", &self.op)
             .field("term", &self.term)
             .field("sub_expr", &self.sub_expr)
+            .finish()
+    }
+}
+
+impl fmt::Debug for VarAssignment {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("VarAssignment")
+            .field("identifier", &self.name)
+            .field("value", &self.value)
+            .finish()
+    }
+}
+
+impl fmt::Debug for Identifier {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Identifier")
+            .field("name", &self.name)
             .finish()
     }
 }

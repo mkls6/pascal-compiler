@@ -60,9 +60,9 @@ impl Parser {
     }
 
     fn parse_sub_term(&mut self) -> Result<Option<SubTerm>, CompilerError> {
-        // TODO: this check should not be here
+        // TODO: this check probably should not be here
         if let Some(Ok(Token::RBrace)) = self.current_token {
-            return Ok(None)
+            return Ok(None);
         };
 
         let op_res = self.parse_multiplicative_op()?;
@@ -86,9 +86,9 @@ impl Parser {
     }
 
     fn parse_additive_op(&mut self) -> Result<Option<AdditiveOp>, CompilerError> {
-        // TODO: this check should not be here
+        // TODO: this check probably should not be here
         if let Some(Ok(Token::RBrace)) = self.current_token {
-            return Ok(None)
+            return Ok(None);
         };
 
         let op = match &self.current_token {
@@ -166,8 +166,42 @@ impl Parser {
         }
     }
 
-    pub fn parse(&mut self) -> Result<Expression, CompilerError> {
-        self.parse_expr()
+    fn parse_identifier(&mut self) -> Result<Identifier, CompilerError> {
+        match &self.current_token {
+            Some(Ok(Token::Identifier(s))) => {
+                let id = Identifier { name: s.clone() };
+                self.next_token();
+                Ok(id)
+            }
+            Some(Ok(t)) => Err(CompilerError::syntax(format!("Expected identifier, found {}", t), 0, 0)),
+            Some(Err(e)) => Err(e.clone()),
+            None => Err(CompilerError::syntax("Expected identifier, found EOF".into(), 0, 0))
+        }
+    }
+
+    fn parse_assignment(&mut self) -> Result<VarAssignment, CompilerError> {
+        let id = self.parse_identifier()?;
+
+        match &self.current_token {
+            Some(Ok(Token::AssignOp)) => {
+                self.next_token();
+
+                let assignment = VarAssignment {
+                    name: id,
+                    value: self.parse_expr()?,
+                };
+
+                Ok(assignment)
+            },
+            Some(Ok(t)) => Err(CompilerError::syntax(format!("Expected :=, found {}", t), 0, 0)),
+            Some(Err(e)) => Err(e.clone()),
+            _ => Err(CompilerError::syntax("Expected :=, found EOF".into(), 0, 0))
+        }
+    }
+
+    pub fn parse(&mut self) -> Result<VarAssignment, CompilerError> {
+        self.parse_assignment()
+        // self.parse_expr()
     }
 
     fn parse_multiplicative_op(&mut self) -> Result<Option<MultiplicativeOp>, CompilerError> {
