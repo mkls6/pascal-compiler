@@ -256,6 +256,9 @@ impl Parser {
                 self.next_token();
                 Ok(Some(MultiplicativeOp::Mod))
             }
+            Some(Ok(Token::Identifier(s))) => {
+                Err(CompilerError::syntax(format!("Expected ; but found {}", s), 0, 0))
+            }
             Some(Ok(Token::PlusOp)) |
             Some(Ok(Token::MinusOp)) |
             Some(Ok(Token::Semicolon)) |
