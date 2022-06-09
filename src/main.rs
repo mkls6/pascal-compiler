@@ -31,6 +31,9 @@ fn main() {
             match res {
                 Ok(r) => {
                     println!("Parsed expression!");
+                    for e in parser.errors {
+                        println!("{}", e);
+                    }
                     println!("Representation:\n{:#?}", r);
                 },
                 Err(e) => println!("{}", e),

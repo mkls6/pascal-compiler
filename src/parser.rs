@@ -7,6 +7,7 @@ use std::iter::Peekable;
 pub struct Parser {
     lexer: Peekable<Lexer>,
     current_token: Option<Result<Token, CompilerError>>,
+    pub(crate) errors: Vec<CompilerError>,
 }
 
 impl Parser {
@@ -14,6 +15,7 @@ impl Parser {
         let mut parser = Self {
             lexer: lexer.peekable(),
             current_token: None,
+            errors: Vec::new(),
         };
 
         parser.next_token();
@@ -162,7 +164,21 @@ impl Parser {
                 self.next_token();
                 break;
             } else {
-                statements.push(self.parse_statement()?);
+                let statement = self.parse_statement();
+                match statement {
+                    Ok(st) => statements.push(st),
+                    Err(e) => {
+                        self.errors.push(e);
+
+                        loop {
+                            match self.current_token {
+                                // TODO: check for proper starters
+                                Some(Ok(Token::Identifier(_))) => break,
+                                _ => self.next_token()
+                            }
+                        }
+                    }
+                }
             };
         }
 
