@@ -30,6 +30,7 @@ impl Parser {
             Some(Ok(t)) => match t {
                 Token::Integer(i) => Ok(Factor::Integer(*i)),
                 Token::Real(f) => Ok(Factor::Real(*f)),
+                Token::Identifier(s) => Ok(Factor::Identifier(Identifier { name: s.clone() })),
                 Token::LBrace => {
                     Ok(Factor::Expression(Box::new(self.parse_expr()?)))
                 }
@@ -101,7 +102,7 @@ impl Parser {
                     self.next_token();
                     Ok(Some(AdditiveOp::Minus))
                 }
-                Token::DivOp | Token::MulOp | Token::ModOp => Ok(None),
+                Token::DivOp | Token::MulOp | Token::ModOp | Token::Semicolon | Token::EndKeyword => Ok(None),
                 tok => Err(CompilerError::syntax(
                     String::from(format!("Expected operator, found {}", tok)),
                     0,
@@ -137,6 +138,37 @@ impl Parser {
             }
             None => Ok(None),
         }
+    }
+
+    fn parse_statement(&mut self) -> Result<Statement, CompilerError> {
+        match &self.current_token {
+            Some(Ok(Token::Identifier(_))) => {
+                Ok(Statement::Simple(self.parse_assignment()?))
+            }
+            _ => Err(CompilerError::syntax("Illegal statement".into(), 0, 0))
+        }
+    }
+
+    fn parse_compound(&mut self) -> Result<Compound, CompilerError> {
+        if let Some(Ok(Token::BeginKeyword)) = self.current_token {
+            // Consume
+            self.next_token();
+        };
+
+        let mut statements = Vec::new();
+
+        loop {
+            if let Some(Ok(Token::EndKeyword)) = self.current_token {
+                self.next_token();
+                break;
+            } else {
+                statements.push(self.parse_statement()?);
+            };
+        }
+
+        Ok(Compound {
+            statements
+        })
     }
 
     fn parse_expr(&mut self) -> Result<Expression, CompilerError> {
@@ -191,16 +223,22 @@ impl Parser {
                     value: self.parse_expr()?,
                 };
 
+                if let Some(Ok(Token::Semicolon)) = self.current_token {
+                    // Consume
+                    self.next_token();
+                }
+
                 Ok(assignment)
-            },
+            }
             Some(Ok(t)) => Err(CompilerError::syntax(format!("Expected :=, found {}", t), 0, 0)),
             Some(Err(e)) => Err(e.clone()),
             _ => Err(CompilerError::syntax("Expected :=, found EOF".into(), 0, 0))
         }
     }
 
-    pub fn parse(&mut self) -> Result<VarAssignment, CompilerError> {
-        self.parse_assignment()
+    pub fn parse(&mut self) -> Result<Compound, CompilerError> {
+        self.parse_compound()
+        // self.parse_assignment()
         // self.parse_expr()
     }
 
@@ -218,7 +256,11 @@ impl Parser {
                 self.next_token();
                 Ok(Some(MultiplicativeOp::Mod))
             }
-            Some(Ok(Token::PlusOp)) | Some(Ok(Token::MinusOp)) | None => Ok(None),
+            Some(Ok(Token::PlusOp)) |
+            Some(Ok(Token::MinusOp)) |
+            Some(Ok(Token::Semicolon)) |
+            Some(Ok(Token::EndKeyword)) |
+            None => Ok(None),
             Some(Ok(t)) => Err(CompilerError::syntax(
                 String::from(format!("Expected *, div or mod, found {}", t)),
                 0,

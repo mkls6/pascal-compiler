@@ -4,6 +4,7 @@ use std::fmt::Formatter;
 pub enum Factor {
     Integer(i32),
     Real(f32),
+    Identifier(Identifier),
     Expression(Box<Expression>),
 }
 
@@ -50,11 +51,38 @@ pub struct Expression {
     pub(crate) sub_expr: Option<SubExpression>,
 }
 
+pub struct Compound {
+    pub(crate) statements: Vec<Statement>,
+}
+
+pub enum Statement {
+    Simple(VarAssignment),
+}
+
+impl fmt::Debug for Statement {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+       match self {
+           Statement::Simple(a) => f.debug_struct("Simple Statement")
+               .field("value", &a)
+               .finish(),
+       }
+    }
+}
+
+impl fmt::Debug for Compound {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Compound")
+            .field("statements", &self.statements)
+            .finish()
+    }
+}
+
 impl fmt::Debug for Factor {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Factor::Integer(i) => write!(f, "Factor<Int>({:?})", i),
             Factor::Real(real) => write!(f, "Factor<Real>({:?})", real),
+            Factor::Identifier(i) => write!(f, "Factor<Variable>({:?})", i),
             Factor::Expression(inner) => {
                 f.debug_struct("Factor")
                     .field("expression", &inner)
