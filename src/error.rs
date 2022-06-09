@@ -4,6 +4,7 @@ use std::fmt;
 pub enum ErrorType {
     Lexical,
     Syntax,
+    #[allow(dead_code)]
     Semantic,
 }
 
@@ -46,6 +47,7 @@ impl CompilerError {
         CompilerError::new(description, line, column, ErrorType::Syntax)
     }
 
+    #[allow(dead_code)]
     pub fn semantic(description: String, line: usize, column: usize) -> Self {
         CompilerError::new(description, line, column, ErrorType::Semantic)
     }
