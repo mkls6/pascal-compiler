@@ -30,6 +30,19 @@ impl Parser {
             Some(Ok(t)) => match t {
                 Token::Integer(i) => Ok(Factor::Integer(*i)),
                 Token::Real(f) => Ok(Factor::Real(*f)),
+                Token::LBrace => {
+                    // Consume left brace
+                    self.next_token();
+                    let expr = Ok(Factor::Expression(Box::new(self.parse_expr()?)));
+
+                    match self.current_token {
+                        Some(Ok(Token::RBrace)) => {
+                            self.next_token();
+                            expr
+                        }
+                        _ => Err(CompilerError::syntax("Expected closing brace".into(), 0, 0))
+                    }
+                }
                 tok => Err(CompilerError::syntax(
                     String::from(format!("Expected int or real literal, found {}", tok)),
                     0,
@@ -57,6 +70,10 @@ impl Parser {
     }
 
     fn parse_sub_term(&mut self) -> Result<Option<SubTerm>, CompilerError> {
+        if let Some(Ok(Token::RBrace)) = self.current_token {
+            return Ok(None)
+        };
+
         let op_res = self.parse_multiplicative_op()?;
         match op_res {
             Some(v) => {
@@ -78,6 +95,10 @@ impl Parser {
     }
 
     fn parse_additive_op(&mut self) -> Result<Option<AdditiveOp>, CompilerError> {
+        if let Some(Ok(Token::RBrace)) = self.current_token {
+            return Ok(None)
+        };
+
         let op = match &self.current_token {
             Some(Ok(t)) => match t {
                 Token::PlusOp => {

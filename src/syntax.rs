@@ -1,6 +1,7 @@
 pub enum Factor {
     Integer(i32),
     Real(f32),
+    Expression(Box<Expression>),
 }
 
 pub enum AdditiveOp {
