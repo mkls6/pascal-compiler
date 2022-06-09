@@ -31,17 +31,7 @@ impl Parser {
                 Token::Integer(i) => Ok(Factor::Integer(*i)),
                 Token::Real(f) => Ok(Factor::Real(*f)),
                 Token::LBrace => {
-                    // Consume left brace
-                    self.next_token();
-                    let expr = Ok(Factor::Expression(Box::new(self.parse_expr()?)));
-
-                    match self.current_token {
-                        Some(Ok(Token::RBrace)) => {
-                            self.next_token();
-                            expr
-                        }
-                        _ => Err(CompilerError::syntax("Expected closing brace".into(), 0, 0))
-                    }
+                    Ok(Factor::Expression(Box::new(self.parse_expr()?)))
                 }
                 tok => Err(CompilerError::syntax(
                     String::from(format!("Expected int or real literal, found {}", tok)),
@@ -70,6 +60,7 @@ impl Parser {
     }
 
     fn parse_sub_term(&mut self) -> Result<Option<SubTerm>, CompilerError> {
+        // TODO: this check should not be here
         if let Some(Ok(Token::RBrace)) = self.current_token {
             return Ok(None)
         };
@@ -95,6 +86,7 @@ impl Parser {
     }
 
     fn parse_additive_op(&mut self) -> Result<Option<AdditiveOp>, CompilerError> {
+        // TODO: this check should not be here
         if let Some(Ok(Token::RBrace)) = self.current_token {
             return Ok(None)
         };
@@ -148,31 +140,34 @@ impl Parser {
     }
 
     fn parse_expr(&mut self) -> Result<Expression, CompilerError> {
+        let mut inside_braces = false;
+
+        if let &Some(Ok(Token::LBrace)) = &self.current_token {
+            inside_braces = true;
+            self.next_token();
+        };
+
         let expr = Expression {
             term: self.parse_term()?,
             sub_expr: self.parse_sub_expr()?,
         };
 
-        Ok(expr)
+        if inside_braces {
+            match self.current_token.clone() {
+                Some(Ok(Token::RBrace)) => {
+                    // Do not consume RBrace => it is consumed inside parse_factor
+                    Ok(expr)
+                }
+                Some(Ok(t)) => Err(CompilerError::syntax(format!("Expected closing brace, got {}", t), 0, 0)),
+                _ => Err(CompilerError::syntax("Unexpected EOF (expected '}}'".into(), 0, 0))
+            }
+        } else {
+            Ok(expr)
+        }
     }
 
     pub fn parse(&mut self) -> Result<Expression, CompilerError> {
-        match &mut self.current_token {
-            Some(Err(e)) => Err((*e).clone()),
-            Some(Ok(t)) => match (*t).clone() {
-                Token::Integer(_) | Token::Real(_) => self.parse_expr(),
-                tok => Err(CompilerError::syntax(
-                    String::from(format!("Expected int or real literal, found {}", tok)),
-                    0,
-                    0,
-                )),
-            },
-            None => Err(CompilerError::syntax(
-                String::from("Expected program start, found EOF (empty program)"),
-                0,
-                0,
-            )),
-        }
+        self.parse_expr()
     }
 
     fn parse_multiplicative_op(&mut self) -> Result<Option<MultiplicativeOp>, CompilerError> {
