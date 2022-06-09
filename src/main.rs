@@ -29,7 +29,10 @@ fn main() {
 
             let res = parser.parse();
             match res {
-                Ok(_) => println!("Parsed expression!"),
+                Ok(r) => {
+                    println!("Parsed expression!");
+                    println!("Representation:\n{:#?}", r);
+                },
                 Err(e) => println!("{}", e),
             }
 
