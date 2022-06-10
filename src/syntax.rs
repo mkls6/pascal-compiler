@@ -1,9 +1,10 @@
+use crate::token::Token;
 use std::fmt;
 use std::fmt::Formatter;
 
 pub enum Factor {
-    Integer(i32),
-    Real(f32),
+    Integer(Token),
+    Real(Token),
     Identifier(Identifier),
     Expression(Box<Expression>),
 }
@@ -19,8 +20,9 @@ pub enum MultiplicativeOp {
     Mod,
 }
 
+#[derive(Clone)]
 pub struct Identifier {
-    pub(crate) name: String, // TODO: type, usage, etc
+    pub(crate) id: Token, // TODO: type, usage, etc
 }
 
 pub struct VarAssignment {
@@ -186,7 +188,7 @@ impl fmt::Debug for VarAssignment {
 impl fmt::Debug for Identifier {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("Identifier")
-            .field("name", &self.name)
+            .field("name", &self.id)
             .finish()
     }
 }

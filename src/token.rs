@@ -1,7 +1,20 @@
 use std::fmt;
+use std::fmt::Formatter;
+
+#[derive(Clone)]
+pub struct Token {
+    pub(crate) token: TokenType,
+    pub(crate) pos: (usize, usize),
+}
+
+impl Token {
+    pub fn new(token: TokenType, pos: (usize, usize)) -> Self {
+        Token { token, pos }
+    }
+}
 
 #[derive(Debug, Clone)]
-pub enum Token {
+pub enum TokenType {
     Integer(i32),
     Identifier(String),
     StringLiteral(String),
@@ -25,30 +38,39 @@ pub enum Token {
     EOF,
 }
 
-impl fmt::Display for Token {
+impl fmt::Debug for Token {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Token")
+            .field("type", &self.token)
+            .field("position", &self.pos)
+            .finish()
+    }
+}
+
+impl fmt::Display for TokenType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Token::Integer(i) => write!(f, "Integer({})", i),
-            Token::PlusOp => write!(f, "Operator(+)"),
-            Token::MinusOp => write!(f, "Operator(-)"),
-            Token::EOF => write!(f, "EOF"),
-            Token::MulOp => write!(f, "Operator('*')"),
-            Token::DivOp => write!(f, "Operator('div')"),
-            Token::ModOp => write!(f, "Operator('mod')"),
-            Token::Identifier(s) => write!(f, "Identifier('{}')", s),
-            Token::BeginKeyword => write!(f, "'BEGIN' keyword"),
-            Token::EndKeyword => write!(f, "'END' keyword"),
-            Token::ProgramKeyword => write!(f, "'PROGRAM' keyword"),
-            Token::VarKeyword => write!(f, "'VAR' keyword"),
-            Token::AssignOp => write!(f, "'Assign (:=)' operator"),
-            Token::Colon => write!(f, "Colon"),
-            Token::Comma => write!(f, ","),
-            Token::Semicolon => write!(f, "Semicolon"),
-            Token::Period => write!(f, "Period sign"),
-            Token::LBrace => write!(f, "("),
-            Token::RBrace => write!(f, ")"),
-            Token::StringLiteral(s) => write!(f, "String literal '{}'", s),
-            Token::Real(r) => write!(f, "Real literal '{}'", r),
+            TokenType::Integer(i) => write!(f, "Integer({})", i),
+            TokenType::PlusOp => write!(f, "Operator(+)"),
+            TokenType::MinusOp => write!(f, "Operator(-)"),
+            TokenType::EOF => write!(f, "EOF"),
+            TokenType::MulOp => write!(f, "Operator('*')"),
+            TokenType::DivOp => write!(f, "Operator('div')"),
+            TokenType::ModOp => write!(f, "Operator('mod')"),
+            TokenType::Identifier(s) => write!(f, "Identifier('{}')", s),
+            TokenType::BeginKeyword => write!(f, "'BEGIN' keyword"),
+            TokenType::EndKeyword => write!(f, "'END' keyword"),
+            TokenType::ProgramKeyword => write!(f, "'PROGRAM' keyword"),
+            TokenType::VarKeyword => write!(f, "'VAR' keyword"),
+            TokenType::AssignOp => write!(f, "'Assign (:=)' operator"),
+            TokenType::Colon => write!(f, "Colon"),
+            TokenType::Comma => write!(f, ","),
+            TokenType::Semicolon => write!(f, "Semicolon"),
+            TokenType::Period => write!(f, "Period sign"),
+            TokenType::LBrace => write!(f, "("),
+            TokenType::RBrace => write!(f, ")"),
+            TokenType::StringLiteral(s) => write!(f, "String literal '{}'", s),
+            TokenType::Real(r) => write!(f, "Real literal '{}'", r),
         }
     }
 }

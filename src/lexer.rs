@@ -1,6 +1,6 @@
 use crate::error::CompilerError;
 use crate::io::CharReader;
-use crate::token::Token;
+use crate::token::{Token, TokenType};
 use std::iter::Iterator;
 
 pub struct Lexer {
@@ -68,7 +68,7 @@ impl Lexer {
             let parsed = num.parse::<f32>();
 
             match parsed {
-                Ok(f) => Ok(Token::Real(f)),
+                Ok(f) => Ok(Token::new(TokenType::Real(f), self.chars.position())),
                 _ => {
                     let pos = self.chars.position();
                     Err(CompilerError::lexical(
@@ -82,7 +82,7 @@ impl Lexer {
             let parsed = num.parse::<i32>();
 
             match parsed {
-                Ok(i) => Ok(Token::Integer(i)),
+                Ok(i) => Ok(Token::new(TokenType::Integer(i), self.chars.position())),
                 _ => {
                     let pos = self.chars.position();
 
@@ -98,7 +98,7 @@ impl Lexer {
 
     fn maybe_keyword(&mut self) -> Result<Token, CompilerError> {
         if self.chars.by_ref().current_char().is_none() {
-            Ok(Token::EOF)
+            Ok(Token::new(TokenType::EOF, self.chars.position()))
         } else {
             let mut s = String::new();
             s.push(self.chars.by_ref().current_char().unwrap());
@@ -110,42 +110,42 @@ impl Lexer {
                 }
             }
 
+            let pos = self.chars.position();
+
             match s.to_lowercase().as_str() {
-                "div" => Ok(Token::DivOp),
-                "mod" => Ok(Token::ModOp),
-                "program" => Ok(Token::ProgramKeyword),
-                "begin" => Ok(Token::BeginKeyword),
-                "end" => Ok(Token::EndKeyword),
-                "var" => Ok(Token::VarKeyword),
-                _ => Ok(Token::Identifier(s)),
+                "div" => Ok(Token::new(TokenType::DivOp, pos)),
+                "mod" => Ok(Token::new(TokenType::ModOp, pos)),
+                "program" => Ok(Token::new(TokenType::ProgramKeyword, pos)),
+                "begin" => Ok(Token::new(TokenType::BeginKeyword, pos)),
+                "end" => Ok(Token::new(TokenType::EndKeyword, pos)),
+                "var" => Ok(Token::new(TokenType::VarKeyword, pos)),
+                _ => Ok(Token::new(TokenType::Identifier(s), pos)),
             }
         }
     }
 
     fn operator(&mut self) -> Result<Token, CompilerError> {
+        let pos = self.chars.position();
+
         let op = if self.chars.current_char().is_none() {
-            Ok(Token::EOF)
+            Ok(Token::new(TokenType::EOF, pos))
         } else {
             match self.chars.current_char().unwrap() {
-                '+' => Ok(Token::PlusOp),
-                '-' => Ok(Token::MinusOp),
-                '*' => Ok(Token::MulOp),
+                '+' => Ok(Token::new(TokenType::PlusOp, pos)),
+                '-' => Ok(Token::new(TokenType::MinusOp, pos)),
+                '*' => Ok(Token::new(TokenType::MulOp, pos)),
                 ':' => match self.chars.by_ref().peek() {
                     Some(ch) if ch == &'=' => {
                         self.chars.by_ref().next();
-                        Ok(Token::AssignOp)
+                        Ok(Token::new(TokenType::AssignOp, self.chars.position()))
                     }
-                    _ => Ok(Token::Colon),
+                    _ => Ok(Token::new(TokenType::Colon, pos)),
                 },
-                _ => {
-                    let pos = self.chars.position();
-
-                    Err(CompilerError::lexical(
-                        String::from("Invalid operator"),
-                        pos.0,
-                        pos.1,
-                    ))
-                }
+                _ => Err(CompilerError::lexical(
+                    String::from("Invalid operator"),
+                    pos.0,
+                    pos.1,
+                )),
             }
         };
 
@@ -154,15 +154,17 @@ impl Lexer {
     }
 
     fn symbol(&mut self) -> Result<Token, CompilerError> {
+        let pos = self.chars.position();
+
         let sym = if self.chars.current_char().is_none() {
-            Ok(Token::EOF)
+            Ok(Token::new(TokenType::EOF, pos))
         } else {
             match self.chars.current_char().unwrap() {
-                ';' => Ok(Token::Semicolon),
-                '.' => Ok(Token::Period),
-                '(' => Ok(Token::LBrace),
-                ')' => Ok(Token::RBrace),
-                ',' => Ok(Token::Comma),
+                ';' => Ok(Token::new(TokenType::Semicolon, pos)),
+                '.' => Ok(Token::new(TokenType::Period, pos)),
+                '(' => Ok(Token::new(TokenType::LBrace, pos)),
+                ')' => Ok(Token::new(TokenType::RBrace, pos)),
+                ',' => Ok(Token::new(TokenType::Comma, pos)),
                 '\'' => {
                     // Read chars until string literal is closed
                     let literal: String = self
@@ -172,30 +174,22 @@ impl Lexer {
                         .collect();
 
                     match self.chars.current_char() {
-                        Some('\'') => Ok(Token::StringLiteral(literal)),
-                        _ => {
-                            let pos = self.chars.position();
-
-                            Err(CompilerError::lexical(
-                                String::from("Invalid string literal"),
-                                pos.0,
-                                pos.1,
-                            ))
-                        }
+                        Some('\'') => Ok(Token::new(TokenType::StringLiteral(literal), pos)),
+                        _ => Err(CompilerError::lexical(
+                            String::from("Invalid string literal"),
+                            pos.0,
+                            pos.1,
+                        )),
                     }
                 }
-                _ => {
-                    let pos = self.chars.position();
-
-                    Err(CompilerError::lexical(
-                        String::from(format!(
-                            "Unsupported symbol {}",
-                            self.chars.current_char().unwrap()
-                        )),
-                        pos.0,
-                        pos.1,
-                    ))
-                }
+                _ => Err(CompilerError::lexical(
+                    String::from(format!(
+                        "Unsupported symbol {}",
+                        self.chars.current_char().unwrap()
+                    )),
+                    pos.0,
+                    pos.1,
+                )),
             }
         };
 
@@ -217,11 +211,14 @@ impl Iterator for Lexer {
                 _ if ch.is_alphanumeric() => self.maybe_keyword(),
                 _ => self.symbol(),
             },
-            None => Ok(Token::EOF),
+            None => Ok(Token::new(TokenType::EOF, self.chars.position())),
         };
 
         match token {
-            Ok(Token::EOF) => None,
+            Ok(Token {
+                token: TokenType::EOF,
+                ..
+            }) => None,
             _ => Some(token),
         }
     }
