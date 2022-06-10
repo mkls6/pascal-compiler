@@ -32,9 +32,7 @@ impl Parser {
             Some(Ok(t)) => match t {
                 Token::Integer(i) => Ok(Factor::Integer(*i)),
                 Token::Real(f) => Ok(Factor::Real(*f)),
-                Token::Identifier(s) => Ok(Factor::Identifier(crate::syntax::Identifier {
-                    name: s.clone(),
-                })),
+                Token::Identifier(s) => Ok(Factor::Identifier(Identifier { name: s.clone() })),
                 Token::LBrace => Ok(Factor::Expression(Box::new(self.parse_expr()?))),
                 tok => Err(CompilerError::syntax(
                     String::from(format!("Expected int or real literal, found {}", tok)),
@@ -336,7 +334,7 @@ impl Parser {
         }
     }
 
-    fn parse_identifier(&mut self) -> Result<crate::syntax::Identifier, CompilerError> {
+    fn parse_identifier(&mut self) -> Result<Identifier, CompilerError> {
         match &self.current_token {
             Some(Ok(Token::Identifier(s))) => {
                 let id = Identifier { name: s.clone() };
