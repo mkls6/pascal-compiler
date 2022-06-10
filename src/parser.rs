@@ -28,9 +28,8 @@ impl Parser {
         let res = self.lexer.next();
         self.current_token = res;
 
-        match &self.current_token {
-            Some(Ok(t)) => self.current_pos = t.pos,
-            _ => (),
+        if let Some(Ok(t)) = &self.current_token {
+            self.current_pos = t.pos
         }
     }
 
@@ -54,14 +53,14 @@ impl Parser {
                     ..
                 } => Ok(Factor::Expression(Box::new(self.parse_expr()?))),
                 tok => Err(CompilerError::syntax(
-                    String::from(format!("Expected int or real literal, found {:#?}", tok)),
+                    format!("Expected int or real literal, found {:#?}", tok),
                     tok.pos.0,
                     tok.pos.1,
                 )),
             },
             Some(Err(e)) => Err((*e).clone()),
             _ => Err(CompilerError::syntax(
-                String::from(format!("Expected int or real, found EOF")),
+                format!("Expected int or real, found EOF"),
                 self.current_pos.0,
                 self.current_pos.1,
             )),
@@ -94,10 +93,7 @@ impl Parser {
             Some(v) => {
                 let factor = self.parse_factor()?;
                 let sub_term_res = self.parse_sub_term()?;
-                let sub_term = match sub_term_res {
-                    Some(t) => Some(Box::new(t)),
-                    None => None,
-                };
+                let sub_term = sub_term_res.map(Box::new);
 
                 Ok(Some(SubTerm {
                     op: v,
@@ -111,12 +107,6 @@ impl Parser {
 
     fn parse_var_declaration(&mut self) -> Result<Vec<VarDeclaration>, CompilerError> {
         let mut identifiers = Vec::new();
-        let var_type;
-
-        // while let Some(Ok(Token {
-        //     token: TokenType::Identifier(_),
-        //     ..
-        // })) = self.current_token.clone()
         loop {
             match self.current_token.clone() {
                 Some(Ok(Token {
@@ -148,7 +138,7 @@ impl Parser {
             }
         }
 
-        var_type = match &self.current_token {
+        let var_type = match &self.current_token {
             Some(Ok(Token {
                 token: TokenType::Colon,
                 ..
@@ -329,7 +319,7 @@ impl Parser {
                     ..
                 } => Ok(None),
                 tok => Err(CompilerError::syntax(
-                    String::from(format!("Expected operator, found {:#?}", tok)),
+                    format!("Expected operator, found {:#?}", tok),
                     tok.pos.0,
                     tok.pos.1,
                 )),
@@ -590,7 +580,7 @@ impl Parser {
                 pos.1,
             )),
             Some(Ok(t)) => Err(CompilerError::syntax(
-                String::from(format!("Expected *, div or mod, found {:#?}", t)),
+                format!("Expected *, div or mod, found {:#?}", t),
                 t.pos.0,
                 t.pos.1,
             )),

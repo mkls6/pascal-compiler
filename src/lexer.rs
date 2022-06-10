@@ -72,7 +72,7 @@ impl Lexer {
                 _ => {
                     let pos = self.chars.position();
                     Err(CompilerError::lexical(
-                        String::from(format!("Invalid real literal {}", num)),
+                        format!("Invalid real literal {}", num),
                         pos.0,
                         pos.1,
                     ))
@@ -87,7 +87,7 @@ impl Lexer {
                     let pos = self.chars.position();
 
                     Err(CompilerError::lexical(
-                        String::from(format!("Invalid int literal {}", num)),
+                        format!("Invalid int literal {}", num),
                         pos.0,
                         pos.1,
                     ))
@@ -142,7 +142,7 @@ impl Lexer {
                     _ => Ok(Token::new(TokenType::Colon, pos)),
                 },
                 _ => Err(CompilerError::lexical(
-                    String::from("Invalid operator"),
+                    "Invalid operator".into(),
                     pos.0,
                     pos.1,
                 )),
@@ -176,17 +176,14 @@ impl Lexer {
                     match self.chars.current_char() {
                         Some('\'') => Ok(Token::new(TokenType::StringLiteral(literal), pos)),
                         _ => Err(CompilerError::lexical(
-                            String::from("Invalid string literal"),
+                            "Invalid string literal".into(),
                             pos.0,
                             pos.1,
                         )),
                     }
                 }
                 _ => Err(CompilerError::lexical(
-                    String::from(format!(
-                        "Unsupported symbol {}",
-                        self.chars.current_char().unwrap()
-                    )),
+                    format!("Unsupported symbol {}", self.chars.current_char().unwrap()),
                     pos.0,
                     pos.1,
                 )),
