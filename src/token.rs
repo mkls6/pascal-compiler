@@ -5,8 +5,6 @@ pub enum Token {
     Integer(i32),
     Identifier(String),
     StringLiteral(String),
-    IntegerKeyword,
-    RealKeyword,
     Real(f32),
     ProgramKeyword,
     VarKeyword,
@@ -22,6 +20,7 @@ pub enum Token {
     Period,
     LBrace,
     RBrace,
+    Comma,
     Semicolon,
     EOF,
 }
@@ -40,17 +39,16 @@ impl fmt::Display for Token {
             Token::BeginKeyword => write!(f, "'BEGIN' keyword"),
             Token::EndKeyword => write!(f, "'END' keyword"),
             Token::ProgramKeyword => write!(f, "'PROGRAM' keyword"),
-            Token::IntegerKeyword => write!(f, "'INTEGER' keyword"),
             Token::VarKeyword => write!(f, "'VAR' keyword"),
             Token::AssignOp => write!(f, "'Assign (:=)' operator"),
             Token::Colon => write!(f, "Colon"),
+            Token::Comma => write!(f, ","),
             Token::Semicolon => write!(f, "Semicolon"),
             Token::Period => write!(f, "Period sign"),
             Token::LBrace => write!(f, "("),
             Token::RBrace => write!(f, ")"),
             Token::StringLiteral(s) => write!(f, "String literal '{}'", s),
             Token::Real(r) => write!(f, "Real literal '{}'", r),
-            Token::RealKeyword => write!(f, "REAL keyword"),
         }
     }
 }

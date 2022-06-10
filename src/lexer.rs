@@ -116,8 +116,6 @@ impl Lexer {
                 "program" => Ok(Token::ProgramKeyword),
                 "begin" => Ok(Token::BeginKeyword),
                 "end" => Ok(Token::EndKeyword),
-                "integer" => Ok(Token::IntegerKeyword),
-                "real" => Ok(Token::RealKeyword),
                 "var" => Ok(Token::VarKeyword),
                 _ => Ok(Token::Identifier(s)),
             }
@@ -164,6 +162,7 @@ impl Lexer {
                 '.' => Ok(Token::Period),
                 '(' => Ok(Token::LBrace),
                 ')' => Ok(Token::RBrace),
+                ',' => Ok(Token::Comma),
                 '\'' => {
                     // Read chars until string literal is closed
                     let literal: String = self

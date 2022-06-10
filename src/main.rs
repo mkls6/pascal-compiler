@@ -34,8 +34,14 @@ fn main() {
                     for e in parser.errors {
                         println!("{}", e);
                     }
-                    println!("Representation:\n{:#?}", r);
-                },
+
+                    let (section, compound) = r;
+
+                    if let Some(sec) = section {
+                        println!("Variable section:\n{:#?}", sec);
+                    }
+                    println!("Compound:\n{:#?}", compound);
+                }
                 Err(e) => println!("{}", e),
             }
 

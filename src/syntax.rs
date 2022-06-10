@@ -20,13 +20,12 @@ pub enum MultiplicativeOp {
 }
 
 pub struct Identifier {
-    pub(crate) name: String
-    // TODO: type, usage, etc
+    pub(crate) name: String, // TODO: type, usage, etc
 }
 
 pub struct VarAssignment {
     pub(crate) name: Identifier,
-    pub(crate) value: Expression
+    pub(crate) value: Expression,
 }
 
 pub struct Term {
@@ -59,13 +58,40 @@ pub enum Statement {
     Simple(VarAssignment),
 }
 
+pub struct VarDeclaration {
+    pub(crate) id: Identifier,
+    pub(crate) type_name: Identifier,
+}
+
+pub struct VarSection {
+    pub(crate) declarations: Vec<VarDeclaration>,
+}
+
+impl fmt::Debug for VarSection {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("VarSection")
+            .field("declarations", &self.declarations)
+            .finish()
+    }
+}
+
+impl fmt::Debug for VarDeclaration {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("VarDeclaration")
+            .field("id", &self.id)
+            .field("type_name", &self.type_name)
+            .finish()
+    }
+}
+
 impl fmt::Debug for Statement {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-       match self {
-           Statement::Simple(a) => f.debug_struct("Simple Statement")
-               .field("value", &a)
-               .finish(),
-       }
+        match self {
+            Statement::Simple(a) => f
+                .debug_struct("Simple Statement")
+                .field("value", &a)
+                .finish(),
+        }
     }
 }
 
@@ -83,11 +109,10 @@ impl fmt::Debug for Factor {
             Factor::Integer(i) => write!(f, "Factor<Int>({:?})", i),
             Factor::Real(real) => write!(f, "Factor<Real>({:?})", real),
             Factor::Identifier(i) => write!(f, "Factor<Variable>({:?})", i),
-            Factor::Expression(inner) => {
-                f.debug_struct("Factor")
-                    .field("expression", &inner)
-                    .finish()
-            }
+            Factor::Expression(inner) => f
+                .debug_struct("Factor")
+                .field("expression", &inner)
+                .finish(),
         }
     }
 }
@@ -124,7 +149,7 @@ impl fmt::Debug for AdditiveOp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             AdditiveOp::Plus => write!(f, "Plus <+>"),
-            AdditiveOp::Minus => write!(f, "Minus <->")
+            AdditiveOp::Minus => write!(f, "Minus <->"),
         }
     }
 }
@@ -134,7 +159,7 @@ impl fmt::Debug for MultiplicativeOp {
         match self {
             MultiplicativeOp::Mul => write!(f, "Mul <*>"),
             MultiplicativeOp::Div => write!(f, "Div"),
-            MultiplicativeOp::Mod => write!(f, "Mod")
+            MultiplicativeOp::Mod => write!(f, "Mod"),
         }
     }
 }
