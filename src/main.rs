@@ -31,7 +31,7 @@ fn main() {
             match res {
                 Ok(r) => {
                     println!("Parsed program!");
-                    println!("Errors:\n");
+                    println!("Errors:");
 
                     for e in parser.errors {
                         println!("{}", e);

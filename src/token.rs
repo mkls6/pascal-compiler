@@ -11,6 +11,16 @@ impl Token {
     pub fn new(token: TokenType, pos: (usize, usize)) -> Self {
         Token { token, pos }
     }
+    pub fn is_mul_op(&self) -> bool {
+        matches!(self.token, TokenType::MulOp | TokenType::DivOp | TokenType::ModOp)
+    }
+    pub fn is_add_op(&self) -> bool {
+        matches!(self.token, TokenType::PlusOp | TokenType::MinusOp)
+    }
+
+    pub fn is_expression_end(&self) -> bool {
+        matches!(self.token, TokenType::RBrace | TokenType::Semicolon | TokenType::EndKeyword)
+    }
 }
 
 #[derive(Debug, Clone)]

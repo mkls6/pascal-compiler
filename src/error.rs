@@ -24,32 +24,30 @@ impl fmt::Display for ErrorType {
 #[derive(Clone)]
 pub struct CompilerError {
     description: String,
-    line: usize,
-    column: usize,
+    pos: (usize, usize),
     err_type: ErrorType,
 }
 
 impl CompilerError {
-    pub fn new(description: String, line: usize, column: usize, etype: ErrorType) -> Self {
+    pub fn new(description: String, pos: (usize, usize), etype: ErrorType) -> Self {
         Self {
             description,
-            line,
-            column,
+            pos,
             err_type: etype,
         }
     }
 
-    pub fn lexical(description: String, line: usize, column: usize) -> Self {
-        CompilerError::new(description, line, column, ErrorType::Lexical)
+    pub fn lexical(description: String, pos: (usize, usize)) -> Self {
+        CompilerError::new(description, pos, ErrorType::Lexical)
     }
 
-    pub fn syntax(description: String, line: usize, column: usize) -> Self {
-        CompilerError::new(description, line, column, ErrorType::Syntax)
+    pub fn syntax(description: String, pos: (usize, usize)) -> Self {
+        CompilerError::new(description, pos, ErrorType::Syntax)
     }
 
     #[allow(dead_code)]
-    pub fn semantic(description: String, line: usize, column: usize) -> Self {
-        CompilerError::new(description, line, column, ErrorType::Semantic)
+    pub fn semantic(description: String, pos: (usize, usize)) -> Self {
+        CompilerError::new(description, pos, ErrorType::Semantic)
     }
 }
 
@@ -58,7 +56,7 @@ impl fmt::Display for CompilerError {
         write!(
             f,
             "{} Error [{}:{}] {}",
-            self.err_type, self.line, self.column, self.description
+            self.err_type, self.pos.0, self.pos.1, self.description
         )
     }
 }

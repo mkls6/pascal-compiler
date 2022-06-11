@@ -73,8 +73,7 @@ impl Lexer {
                     let pos = self.chars.position();
                     Err(CompilerError::lexical(
                         format!("Invalid real literal {}", num),
-                        pos.0,
-                        pos.1,
+                        pos,
                     ))
                 }
             }
@@ -88,8 +87,7 @@ impl Lexer {
 
                     Err(CompilerError::lexical(
                         format!("Invalid int literal {}", num),
-                        pos.0,
-                        pos.1,
+                        pos,
                     ))
                 }
             }
@@ -143,8 +141,7 @@ impl Lexer {
                 },
                 _ => Err(CompilerError::lexical(
                     "Invalid operator".into(),
-                    pos.0,
-                    pos.1,
+                    pos,
                 )),
             }
         };
@@ -177,15 +174,13 @@ impl Lexer {
                         Some('\'') => Ok(Token::new(TokenType::StringLiteral(literal), pos)),
                         _ => Err(CompilerError::lexical(
                             "Invalid string literal".into(),
-                            pos.0,
-                            pos.1,
+                            pos,
                         )),
                     }
                 }
                 _ => Err(CompilerError::lexical(
                     format!("Unsupported symbol {}", self.chars.current_char().unwrap()),
-                    pos.0,
-                    pos.1,
+                    pos,
                 )),
             }
         };
