@@ -1,5 +1,4 @@
 use std::fmt;
-use std::fmt::Formatter;
 
 #[derive(Clone)]
 pub struct Token {
@@ -45,11 +44,11 @@ pub enum TokenType {
     RBrace,
     Comma,
     Semicolon,
-    EOF,
+    Eof,
 }
 
 impl fmt::Debug for Token {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Token")
             .field("type", &self.token)
             .field("position", &self.pos)
@@ -63,7 +62,7 @@ impl fmt::Display for TokenType {
             TokenType::Integer(i) => write!(f, "Integer({})", i),
             TokenType::PlusOp => write!(f, "Operator(+)"),
             TokenType::MinusOp => write!(f, "Operator(-)"),
-            TokenType::EOF => write!(f, "EOF"),
+            TokenType::Eof => write!(f, "EOF"),
             TokenType::MulOp => write!(f, "Operator('*')"),
             TokenType::DivOp => write!(f, "Operator('div')"),
             TokenType::ModOp => write!(f, "Operator('mod')"),

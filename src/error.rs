@@ -29,11 +29,11 @@ pub struct CompilerError {
 }
 
 impl CompilerError {
-    pub fn new(description: String, pos: (usize, usize), etype: ErrorType) -> Self {
+    pub fn new(description: String, pos: (usize, usize), err_type: ErrorType) -> Self {
         Self {
             description,
             pos,
-            err_type: etype,
+            err_type,
         }
     }
 

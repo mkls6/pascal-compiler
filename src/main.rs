@@ -41,15 +41,6 @@ fn main() {
                 }
                 Err(e) => println!("{}", e),
             }
-
-            // println!("Parsing tokens…");
-
-            // for token in lexer {
-            //     match token {
-            //         Ok(t) => println!("Parsed token {}", t),
-            //         Err(e) => println!("{}", e),
-            //     }
-            // }
         }
         Err(e) => {
             eprintln!("Failed to open file {}: {}", filename, e);

@@ -1,6 +1,5 @@
 use crate::token::Token;
 use std::fmt;
-use std::fmt::Formatter;
 
 pub enum Factor {
     Integer(Token),
@@ -76,7 +75,7 @@ pub struct Program {
 }
 
 impl fmt::Debug for Program {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Program")
             .field("identifier", &self.identifier)
             .field("var_section", &self.var_section)
@@ -86,7 +85,7 @@ impl fmt::Debug for Program {
 }
 
 impl fmt::Debug for VarSection {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("VarSection")
             .field("declarations", &self.declarations)
             .finish()
@@ -94,7 +93,7 @@ impl fmt::Debug for VarSection {
 }
 
 impl fmt::Debug for VarDeclaration {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("VarDeclaration")
             .field("id", &self.id)
             .field("type_name", &self.type_name)
@@ -103,7 +102,7 @@ impl fmt::Debug for VarDeclaration {
 }
 
 impl fmt::Debug for Statement {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Statement::Simple(a) => f
                 .debug_struct("Simple Statement")
@@ -114,7 +113,7 @@ impl fmt::Debug for Statement {
 }
 
 impl fmt::Debug for Compound {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Compound")
             .field("statements", &self.statements)
             .finish()
@@ -193,7 +192,7 @@ impl fmt::Debug for SubExpression {
 }
 
 impl fmt::Debug for VarAssignment {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("VarAssignment")
             .field("identifier", &self.name)
             .field("value", &self.value)
@@ -202,7 +201,7 @@ impl fmt::Debug for VarAssignment {
 }
 
 impl fmt::Debug for Identifier {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Identifier")
             .field("name", &self.id)
             .finish()

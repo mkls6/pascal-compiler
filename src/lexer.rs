@@ -38,26 +38,12 @@ impl Lexer {
 
         loop {
             match self.chars.by_ref().current_char() {
-                Some(ch) if ch.is_digit(10) => num.push(ch),
+                Some(ch) if ch.is_digit(10) || ch.is_alphanumeric() => num.push(ch),
                 Some(ch) if ch == '.' => {
                     num.push(ch);
                     is_real = true;
                 }
                 Some(ch) if ch.is_whitespace() => break,
-                Some(ch) if ch.is_alphanumeric() => {
-                    // Consume everything until whitespace or EOF
-                    num.push(ch);
-
-                    while let Some(ch) = self.chars.next() {
-                        if ch.is_whitespace() {
-                            break;
-                        } else {
-                            num.push(ch);
-                        }
-
-                        break;
-                    }
-                }
                 _ => break,
             }
 
@@ -96,7 +82,7 @@ impl Lexer {
 
     fn maybe_keyword(&mut self) -> Result<Token, CompilerError> {
         if self.chars.by_ref().current_char().is_none() {
-            Ok(Token::new(TokenType::EOF, self.chars.position()))
+            Ok(Token::new(TokenType::Eof, self.chars.position()))
         } else {
             let mut s = String::new();
             s.push(self.chars.by_ref().current_char().unwrap());
@@ -126,7 +112,7 @@ impl Lexer {
         let pos = self.chars.position();
 
         let op = if self.chars.current_char().is_none() {
-            Ok(Token::new(TokenType::EOF, pos))
+            Ok(Token::new(TokenType::Eof, pos))
         } else {
             match self.chars.current_char().unwrap() {
                 '+' => Ok(Token::new(TokenType::PlusOp, pos)),
@@ -139,10 +125,7 @@ impl Lexer {
                     }
                     _ => Ok(Token::new(TokenType::Colon, pos)),
                 },
-                _ => Err(CompilerError::lexical(
-                    "Invalid operator".into(),
-                    pos,
-                )),
+                _ => Err(CompilerError::lexical("Invalid operator".into(), pos)),
             }
         };
 
@@ -154,7 +137,7 @@ impl Lexer {
         let pos = self.chars.position();
 
         let sym = if self.chars.current_char().is_none() {
-            Ok(Token::new(TokenType::EOF, pos))
+            Ok(Token::new(TokenType::Eof, pos))
         } else {
             match self.chars.current_char().unwrap() {
                 ';' => Ok(Token::new(TokenType::Semicolon, pos)),
@@ -172,10 +155,7 @@ impl Lexer {
 
                     match self.chars.current_char() {
                         Some('\'') => Ok(Token::new(TokenType::StringLiteral(literal), pos)),
-                        _ => Err(CompilerError::lexical(
-                            "Invalid string literal".into(),
-                            pos,
-                        )),
+                        _ => Err(CompilerError::lexical("Invalid string literal".into(), pos)),
                     }
                 }
                 _ => Err(CompilerError::lexical(
@@ -203,12 +183,12 @@ impl Iterator for Lexer {
                 _ if ch.is_alphanumeric() => self.maybe_keyword(),
                 _ => self.symbol(),
             },
-            None => Ok(Token::new(TokenType::EOF, self.chars.position())),
+            None => Ok(Token::new(TokenType::Eof, self.chars.position())),
         };
 
         match token {
             Ok(Token {
-                token: TokenType::EOF,
+                token: TokenType::Eof,
                 ..
             }) => None,
             _ => Some(token),

@@ -59,7 +59,7 @@ impl Parser {
             },
             Some(Err(e)) => Err((*e).clone()),
             _ => Err(CompilerError::syntax(
-                format!("Expected int or real, found EOF"),
+                "Expected int or real, found EOF".into(),
                 self.current_pos,
             )),
         };
@@ -79,9 +79,9 @@ impl Parser {
     fn parse_sub_term(&mut self) -> Result<Option<SubTerm>, CompilerError> {
         // TODO: this check probably should not be here
         if let Some(Ok(Token {
-                           token: TokenType::RBrace,
-                           ..
-                       })) = self.current_token
+            token: TokenType::RBrace,
+            ..
+        })) = self.current_token
         {
             return Ok(None);
         };
@@ -100,14 +100,15 @@ impl Parser {
                 }))
             }
             Some(Ok(t)) if t.is_add_op() || t.is_expression_end() => Ok(None),
-            Some(Ok(t)) => {
-                Err(CompilerError::syntax(
-                    format!("Expected *, div or mod, found {:?}", t),
-                    t.pos)
-                )
-            }
+            Some(Ok(t)) => Err(CompilerError::syntax(
+                format!("Expected *, div or mod, found {:?}", t),
+                t.pos,
+            )),
             Some(Err(e)) => Err(e.clone()),
-            None => Err(CompilerError::syntax("Unexpected EOF".into(), self.current_pos))
+            None => Err(CompilerError::syntax(
+                "Unexpected EOF".into(),
+                self.current_pos,
+            )),
         }
     }
 
@@ -117,31 +118,29 @@ impl Parser {
 
         loop {
             match self.current_token.take() {
-                Some(Ok(token)) => {
-                    match token {
-                        Token {
-                            token: TokenType::Identifier(_),
-                            ..
-                        } => {
-                            identifiers.push(Ok(token));
-                            self.next_token();
+                Some(Ok(token)) => match token {
+                    Token {
+                        token: TokenType::Identifier(_),
+                        ..
+                    } => {
+                        identifiers.push(Ok(token));
+                        self.next_token();
 
-                            match &self.current_token {
-                                Some(Ok(Token {
-                                            token: TokenType::Comma,
-                                            ..
-                                        })) => self.next_token(),
-                                _ => break,
-                            }
-                        }
-                        _ => {
-                            identifiers.push(Err(CompilerError::syntax(
-                                format!("Expected identifier, found {:?}", token),
-                                token.pos,
-                            )));
+                        match &self.current_token {
+                            Some(Ok(Token {
+                                token: TokenType::Comma,
+                                ..
+                            })) => self.next_token(),
+                            _ => break,
                         }
                     }
-                }
+                    _ => {
+                        identifiers.push(Err(CompilerError::syntax(
+                            format!("Expected identifier, found {:?}", token),
+                            token.pos,
+                        )));
+                    }
+                },
                 Some(Err(e)) => identifiers.push(Err(e)),
                 None => identifiers.push(Err(CompilerError::syntax(
                     "Unexpected EOF".into(),
@@ -152,9 +151,9 @@ impl Parser {
 
         let var_type = match &self.current_token {
             Some(Ok(Token {
-                        token: TokenType::Colon,
-                        ..
-                    })) => {
+                token: TokenType::Colon,
+                ..
+            })) => {
                 self.next_token();
                 match self.current_token.take() {
                     Some(Ok(token)) => {
@@ -203,9 +202,9 @@ impl Parser {
         let mut declarations = Vec::new();
         let check_section = match &self.current_token {
             Some(Ok(Token {
-                        token: TokenType::VarKeyword,
-                        ..
-                    })) => {
+                token: TokenType::VarKeyword,
+                ..
+            })) => {
                 self.next_token();
                 Ok(())
             }
@@ -233,9 +232,9 @@ impl Parser {
 
                         loop {
                             if let Some(Ok(Token {
-                                               token: TokenType::Identifier(_),
-                                               ..
-                                           })) = self.current_token
+                                token: TokenType::Identifier(_),
+                                ..
+                            })) = self.current_token
                             {
                                 break;
                             };
@@ -246,9 +245,9 @@ impl Parser {
 
                 match self.current_token {
                     Some(Ok(Token {
-                                token: TokenType::BeginKeyword,
-                                pos,
-                            })) => {
+                        token: TokenType::BeginKeyword,
+                        pos,
+                    })) => {
                         if declarations.is_empty() {
                             self.errors.push(CompilerError::syntax(
                                 "Expected identifier, found BEGIN".into(),
@@ -309,7 +308,7 @@ impl Parser {
                 } else {
                     Err(CompilerError::syntax(
                         format!("Expected ';', found {:?}", t),
-                        t.pos
+                        t.pos,
                     ))
                 }
             }
@@ -326,14 +325,21 @@ impl Parser {
         self.next_token();
 
         match tok {
-            Some(Ok(t)) => {
-                match t {
-                    Token { token: TokenType::Period, .. } => Ok(()),
-                    _ => Err(CompilerError::syntax(format!("Expected '.', found {:?}", t), t.pos))
-                }
-            }
+            Some(Ok(t)) => match t {
+                Token {
+                    token: TokenType::Period,
+                    ..
+                } => Ok(()),
+                _ => Err(CompilerError::syntax(
+                    format!("Expected '.', found {:?}", t),
+                    t.pos,
+                )),
+            },
             Some(Err(e)) => Err(e),
-            None => Err(CompilerError::syntax("Unexpected EOF".into(), self.current_pos))
+            None => Err(CompilerError::syntax(
+                "Unexpected EOF".into(),
+                self.current_pos,
+            )),
         }
     }
 
@@ -346,9 +352,9 @@ impl Parser {
         // end.
         match &self.current_token {
             Some(Ok(Token {
-                        token: TokenType::ProgramKeyword,
-                        ..
-                    })) => {
+                token: TokenType::ProgramKeyword,
+                ..
+            })) => {
                 self.next_token();
                 let id = self.parse_identifier()?;
                 // Semicolon check
@@ -366,12 +372,12 @@ impl Parser {
             }
             Some(Ok(t)) => Err(CompilerError::syntax(
                 format!("Expected 'PROGRAM', found {:?}", t),
-                t.pos
+                t.pos,
             )),
             Some(Err(e)) => Err(e.clone()),
             _ => Err(CompilerError::syntax(
                 "Unexpected EOF".into(),
-                self.current_pos
+                self.current_pos,
             )),
         }
     }
@@ -399,7 +405,10 @@ impl Parser {
                 )),
             },
             Some(Err(e)) => Err(e),
-            None => Err(CompilerError::syntax("Unexpected EOF".into(), self.current_pos))
+            None => Err(CompilerError::syntax(
+                "Unexpected EOF".into(),
+                self.current_pos,
+            )),
         };
 
         op
@@ -414,24 +423,26 @@ impl Parser {
                 let sub_expr_res = self.parse_sub_expr()?;
                 let sub_expr = sub_expr_res.map(Box::new);
 
-                Ok(Some(SubExpression {
-                    op,
-                    term,
-                    sub_expr,
-                }))
+                Ok(Some(SubExpression { op, term, sub_expr }))
             }
-            Some(Ok(t)) => Err(CompilerError::syntax(format!("Expected +, - or statement end, found {:?}", t), t.pos)),
+            Some(Ok(t)) => Err(CompilerError::syntax(
+                format!("Expected +, - or statement end, found {:?}", t),
+                t.pos,
+            )),
             Some(Err(e)) => Err(e.clone()),
-            None => Err(CompilerError::syntax("Unexpected EOF".into(), self.current_pos))
+            None => Err(CompilerError::syntax(
+                "Unexpected EOF".into(),
+                self.current_pos,
+            )),
         }
     }
 
     fn parse_statement(&mut self) -> Result<Statement, CompilerError> {
         match &self.current_token {
             Some(Ok(Token {
-                        token: TokenType::Identifier(_),
-                        ..
-                    })) => Ok(Statement::Simple(self.parse_assignment()?)),
+                token: TokenType::Identifier(_),
+                ..
+            })) => Ok(Statement::Simple(self.parse_assignment()?)),
             _ => Err(CompilerError::syntax(
                 "Illegal statement".into(),
                 self.current_pos,
@@ -441,9 +452,9 @@ impl Parser {
 
     fn parse_compound(&mut self) -> Result<Compound, CompilerError> {
         if let Some(Ok(Token {
-                           token: TokenType::BeginKeyword,
-                           ..
-                       })) = self.current_token
+            token: TokenType::BeginKeyword,
+            ..
+        })) = self.current_token
         {
             // Consume
             self.next_token();
@@ -453,9 +464,9 @@ impl Parser {
 
         loop {
             if let Some(Ok(Token {
-                               token: TokenType::EndKeyword,
-                               ..
-                           })) = self.current_token
+                token: TokenType::EndKeyword,
+                ..
+            })) = self.current_token
             {
                 self.next_token();
                 break;
@@ -477,15 +488,19 @@ impl Parser {
     fn skip_until_starters(&mut self) {
         loop {
             match &self.current_token {
-                Some(Ok(token)) => {
-                    match token {
-                        Token { token: TokenType::Identifier(_), .. } |
-                        Token { token: TokenType::EndKeyword, .. } => {
-                            return;
-                        }
-                        _ => self.next_token()
+                Some(Ok(token)) => match token {
+                    Token {
+                        token: TokenType::Identifier(_),
+                        ..
                     }
-                }
+                    | Token {
+                        token: TokenType::EndKeyword,
+                        ..
+                    } => {
+                        return;
+                    }
+                    _ => self.next_token(),
+                },
                 Some(Err(e)) => {
                     self.errors.push(e.clone());
                     self.next_token();
@@ -499,9 +514,9 @@ impl Parser {
         let mut inside_braces = false;
 
         if let &Some(Ok(Token {
-                            token: TokenType::LBrace,
-                            ..
-                        })) = &self.current_token
+            token: TokenType::LBrace,
+            ..
+        })) = &self.current_token
         {
             inside_braces = true;
             self.next_token();
@@ -515,9 +530,9 @@ impl Parser {
         if inside_braces {
             match self.current_token.clone() {
                 Some(Ok(Token {
-                            token: TokenType::RBrace,
-                            ..
-                        })) => {
+                    token: TokenType::RBrace,
+                    ..
+                })) => {
                     // Do not consume RBrace => it is consumed inside parse_factor
                     Ok(expr)
                 }
@@ -539,9 +554,9 @@ impl Parser {
 
         match &self.current_token {
             Some(Ok(Token {
-                        token: TokenType::AssignOp,
-                        ..
-                    })) => {
+                token: TokenType::AssignOp,
+                ..
+            })) => {
                 self.next_token();
 
                 let assignment = VarAssignment {
@@ -576,30 +591,30 @@ impl Parser {
     fn parse_multiplicative_op(&mut self) -> Result<MultiplicativeOp, CompilerError> {
         let op = match &self.current_token {
             Some(Ok(Token {
-                        token: TokenType::MulOp,
-                        ..
-                    })) => {
+                token: TokenType::MulOp,
+                ..
+            })) => {
                 self.next_token();
                 Ok(MultiplicativeOp::Mul)
             }
             Some(Ok(Token {
-                        token: TokenType::DivOp,
-                        ..
-                    })) => {
+                token: TokenType::DivOp,
+                ..
+            })) => {
                 self.next_token();
                 Ok(MultiplicativeOp::Div)
             }
             Some(Ok(Token {
-                        token: TokenType::ModOp,
-                        ..
-                    })) => {
+                token: TokenType::ModOp,
+                ..
+            })) => {
                 self.next_token();
                 Ok(MultiplicativeOp::Mod)
             }
             Some(Ok(Token {
-                        token: TokenType::Identifier(s),
-                        pos,
-                    })) => Err(CompilerError::syntax(
+                token: TokenType::Identifier(s),
+                pos,
+            })) => Err(CompilerError::syntax(
                 format!("Expected ; but found identifier {:?}", s),
                 *pos,
             )),
@@ -608,7 +623,10 @@ impl Parser {
                 t.pos,
             )),
             Some(Err(e)) => Err((*e).clone()),
-            None => Err(CompilerError::syntax("Unexpected EOF".into(), self.current_pos))
+            None => Err(CompilerError::syntax(
+                "Unexpected EOF".into(),
+                self.current_pos,
+            )),
         };
 
         op
