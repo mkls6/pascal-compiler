@@ -30,17 +30,14 @@ fn main() {
             let res = parser.parse();
             match res {
                 Ok(r) => {
-                    println!("Parsed expression!");
+                    println!("Parsed program!");
+                    println!("Errors:\n");
+
                     for e in parser.errors {
                         println!("{}", e);
                     }
 
-                    let (section, compound) = r;
-
-                    if let Some(sec) = section {
-                        println!("Variable section:\n{:#?}", sec);
-                    }
-                    println!("Compound:\n{:#?}", compound);
+                    println!("{:#?}", r)
                 }
                 Err(e) => println!("{}", e),
             }

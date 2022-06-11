@@ -69,6 +69,22 @@ pub struct VarSection {
     pub(crate) declarations: Vec<VarDeclaration>,
 }
 
+pub struct Program {
+    pub(crate) identifier: Identifier,
+    pub(crate) var_section: Option<VarSection>,
+    pub(crate) compound: Compound,
+}
+
+impl fmt::Debug for Program {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Program")
+            .field("identifier", &self.identifier)
+            .field("var_section", &self.var_section)
+            .field("compound", &self.compound)
+            .finish()
+    }
+}
+
 impl fmt::Debug for VarSection {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("VarSection")
