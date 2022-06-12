@@ -1,10 +1,13 @@
 mod error;
 mod io;
 mod lexer;
+mod parser;
+mod syntax;
 mod token;
 
 use io::CharReader;
 use lexer::Lexer;
+use parser::Parser;
 use std::env;
 use std::process::exit;
 
@@ -16,26 +19,27 @@ fn main() {
         exit(1);
     }
 
-    // let mut reader = BufReader::new(File::open(&args[1]).expect("Failed to open source file"));
-    // let mut text = String::new();
-
-    // TODO: read file line by line internally
-    // let _n = reader.read_to_string(&mut text);
-
     let filename = &args[1];
 
     let char_reader = CharReader::new(String::from(filename));
     match char_reader {
         Ok(reader) => {
             let lexer = Lexer::new(reader);
+            let mut parser = Parser::new(lexer);
 
-            println!("Parsing tokens…");
+            let res = parser.parse();
+            match res {
+                Ok(r) => {
+                    println!("Parsed program!");
+                    println!("Errors:");
 
-            for token in lexer {
-                match token {
-                    Ok(t) => println!("Parsed token {}", t),
-                    Err(e) => println!("{}", e),
+                    for e in parser.errors {
+                        println!("{}", e);
+                    }
+
+                    println!("{:#?}", r)
                 }
+                Err(e) => println!("{}", e),
             }
         }
         Err(e) => {

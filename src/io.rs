@@ -28,10 +28,7 @@ impl CharReader {
         let line_num = 1;
         let col_num = 0;
 
-        let current_char = match chars.as_ref() {
-            Some(v) => Some(v[0]),
-            _ => None,
-        };
+        let current_char = chars.as_ref().map(|v| v[0]);
 
         let reader = Self {
             current_char,
@@ -73,7 +70,7 @@ impl Iterator for CharReader {
                 // Loop until non-empty line or EOF
                 loop {
                     match self.lines.by_ref().next() {
-                        Some(Ok(s)) if s.len() > 0 => {
+                        Some(Ok(s)) if !s.is_empty() => {
                             let mut c: Vec<char> = s.chars().collect();
                             c.push('\n');
 
