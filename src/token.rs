@@ -11,14 +11,23 @@ impl Token {
         Token { token, pos }
     }
     pub fn is_mul_op(&self) -> bool {
-        matches!(self.token, TokenType::MulOp | TokenType::DivOp | TokenType::ModOp | TokenType::AndOp )
+        matches!(
+            self.token,
+            TokenType::MulOp | TokenType::DivOp | TokenType::ModOp | TokenType::AndOp
+        )
     }
     pub fn is_add_op(&self) -> bool {
-        matches!(self.token, TokenType::PlusOp | TokenType::MinusOp | TokenType::OrOp)
+        matches!(
+            self.token,
+            TokenType::PlusOp | TokenType::MinusOp | TokenType::OrOp
+        )
     }
 
     pub fn is_expression_end(&self) -> bool {
-        matches!(self.token, TokenType::RBrace | TokenType::Semicolon | TokenType::EndKeyword)
+        matches!(
+            self.token,
+            TokenType::RBrace | TokenType::Semicolon | TokenType::EndKeyword
+        )
     }
 }
 
