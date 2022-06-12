@@ -61,7 +61,7 @@ pub struct SubExpression {
 pub struct Expression {
     pub(crate) term: Term,
     pub(crate) sub_expr: Option<SubExpression>,
-    // pub(crate) expr_type: Identifier,
+    pub(crate) expr_type: String,
 }
 
 pub struct Compound {
@@ -152,6 +152,7 @@ impl fmt::Debug for Expression {
         f.debug_struct("Expression")
             .field("term", &self.term)
             .field("sub_expr", &self.sub_expr)
+            .field("expr_type", &self.expr_type)
             .finish()
     }
 }

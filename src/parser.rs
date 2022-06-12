@@ -615,9 +615,24 @@ impl Parser {
             self.next_token();
         };
 
+        let term = self.parse_term()?;
+        let sub_expr = self.parse_sub_expr()?;
+        let sub_expr_type;
+
+        if sub_expr.is_some() {
+            sub_expr_type = sub_expr.as_ref().unwrap().sub_expr_type.clone();
+        } else {
+            sub_expr_type = String::new();
+        }
+
+        let expr_type = self
+            .analyzer
+            .merge_types(&term.term_type, &sub_expr_type, (0, 0))?;
+
         let expr = Expression {
-            term: self.parse_term()?,
-            sub_expr: self.parse_sub_expr()?,
+            term,
+            sub_expr,
+            expr_type,
         };
 
         if inside_braces {
