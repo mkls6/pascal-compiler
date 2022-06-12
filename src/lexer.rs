@@ -99,6 +99,8 @@ impl Lexer {
             match s.to_lowercase().as_str() {
                 "div" => Ok(Token::new(TokenType::DivOp, pos)),
                 "mod" => Ok(Token::new(TokenType::ModOp, pos)),
+                "or" => Ok(Token::new(TokenType::OrOp, pos)),
+                "and" => Ok(Token::new(TokenType::AndOp, pos)),
                 "program" => Ok(Token::new(TokenType::ProgramKeyword, pos)),
                 "begin" => Ok(Token::new(TokenType::BeginKeyword, pos)),
                 "end" => Ok(Token::new(TokenType::EndKeyword, pos)),

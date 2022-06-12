@@ -11,10 +11,10 @@ impl Token {
         Token { token, pos }
     }
     pub fn is_mul_op(&self) -> bool {
-        matches!(self.token, TokenType::MulOp | TokenType::DivOp | TokenType::ModOp)
+        matches!(self.token, TokenType::MulOp | TokenType::DivOp | TokenType::ModOp | TokenType::AndOp )
     }
     pub fn is_add_op(&self) -> bool {
-        matches!(self.token, TokenType::PlusOp | TokenType::MinusOp)
+        matches!(self.token, TokenType::PlusOp | TokenType::MinusOp | TokenType::OrOp)
     }
 
     pub fn is_expression_end(&self) -> bool {
@@ -34,6 +34,8 @@ pub enum TokenType {
     EndKeyword,
     PlusOp,
     MinusOp,
+    AndOp,
+    OrOp,
     MulOp,
     DivOp,
     ModOp,
@@ -72,6 +74,8 @@ impl fmt::Display for TokenType {
             TokenType::ProgramKeyword => write!(f, "'PROGRAM' keyword"),
             TokenType::VarKeyword => write!(f, "'VAR' keyword"),
             TokenType::AssignOp => write!(f, "'Assign (:=)' operator"),
+            TokenType::AndOp => write!(f, "AND logical operator"),
+            TokenType::OrOp => write!(f, "OR logical operator"),
             TokenType::Colon => write!(f, "Colon"),
             TokenType::Comma => write!(f, ","),
             TokenType::Semicolon => write!(f, "Semicolon"),

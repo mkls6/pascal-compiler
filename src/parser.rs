@@ -55,7 +55,7 @@ impl Parser {
                     let id = Identifier { id: token.clone() };
                     let usage = self.analyzer.find_identifier(&id)?;
                     match usage {
-                        Usage::Variable(_) => {
+                        Usage::Variable(_) | Usage::Constant(_) => {
                             Ok(Factor::Identifier(Identifier { id: token.clone() }))
                         }
                         _ => Err(CompilerError::semantic(
@@ -460,6 +460,13 @@ impl Parser {
                     self.next_token();
                     Ok(AdditiveOp::Minus)
                 }
+                Token {
+                    token: TokenType::OrOp,
+                    ..
+                } => {
+                    self.next_token();
+                    Ok(AdditiveOp::Or)
+                }
                 tok => Err(CompilerError::syntax(
                     format!("Expected additive operator, found {:?}", tok),
                     tok.pos,
@@ -718,6 +725,10 @@ impl Parser {
             })) => {
                 self.next_token();
                 Ok(MultiplicativeOp::Mod)
+            }
+            Some(Ok(Token { token: TokenType::AndOp, .. })) => {
+                self.next_token();
+                Ok(MultiplicativeOp::And)
             }
             Some(Ok(Token {
                 token: TokenType::Identifier(s),

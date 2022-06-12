@@ -11,12 +11,14 @@ pub enum Factor {
 pub enum AdditiveOp {
     Plus,
     Minus,
+    Or,
 }
 
 pub enum MultiplicativeOp {
     Mul,
     Div,
     Mod,
+    And,
 }
 
 #[derive(Clone)]
@@ -183,6 +185,7 @@ impl fmt::Debug for AdditiveOp {
         match self {
             AdditiveOp::Plus => write!(f, "Plus <+>"),
             AdditiveOp::Minus => write!(f, "Minus <->"),
+            AdditiveOp::Or => write!(f, "Logical OR"),
         }
     }
 }
@@ -193,6 +196,7 @@ impl fmt::Debug for MultiplicativeOp {
             MultiplicativeOp::Mul => write!(f, "Mul <*>"),
             MultiplicativeOp::Div => write!(f, "Div"),
             MultiplicativeOp::Mod => write!(f, "Mod"),
+            MultiplicativeOp::And => write!(f, "Logical AND"),
         }
     }
 }
