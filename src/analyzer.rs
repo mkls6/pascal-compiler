@@ -50,6 +50,7 @@ impl Analyzer {
                 let usg = self.find_identifier(s)?;
                 Ok(usg.clone())
             }
+            Factor::Expression(e) => Ok(Usage::Variable(e.expr_type.clone())),
             _ => todo!(),
         }
     }
