@@ -22,7 +22,7 @@ impl Analyzer {
     }
 
     /// Check if identifier is already defined and add in case it is not
-    pub fn check_declaration(
+    pub fn check_var_declaration(
         &mut self,
         decl: VarDeclaration,
     ) -> Result<VarDeclaration, CompilerError> {
@@ -37,6 +37,26 @@ impl Analyzer {
             )),
             None => {
                 cur_scope.insert(&decl.id, Usage::Variable(decl.type_name.get_id()));
+                Ok(decl)
+            }
+        }
+    }
+
+    pub fn check_type_declaration(
+        &mut self,
+        decl: TypeDeclaration,
+    ) -> Result<TypeDeclaration, CompilerError> {
+        let len = self.scopes.len();
+        let cur_scope = &mut self.scopes[len - 1];
+        let str = decl.id.get_id();
+
+        match cur_scope.get(str.clone()) {
+            Some(_) => Err(CompilerError::semantic(
+                format!("Redeclaration of {:?}", str),
+                decl.id.id.pos,
+            )),
+            None => {
+                cur_scope.insert(&decl.id, Usage::Type(Some(decl.parent.get_id())));
                 Ok(decl)
             }
         }

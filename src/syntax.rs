@@ -117,6 +117,7 @@ pub struct VarSection {
 pub struct Program {
     pub(crate) identifier: Identifier,
     pub(crate) var_section: Option<VarSection>,
+    pub(crate) type_section: Option<TypeSection>,
     pub(crate) compound: Compound,
 }
 

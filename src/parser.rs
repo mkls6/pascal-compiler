@@ -199,6 +199,156 @@ impl Parser {
         }
     }
 
+    fn parse_type_declaration(&mut self) -> Result<Vec<TypeDeclaration>, CompilerError> {
+        // id {,id} : type_id
+        let mut types = Vec::new();
+
+        loop {
+            match self.current_token.take() {
+                Some(Ok(token)) => match token {
+                    Token {
+                        token: TokenType::Identifier(_),
+                        ..
+                    } => {
+                        types.push(Ok(token));
+                        self.next_token();
+
+                        match &self.current_token {
+                            Some(Ok(Token {
+                                token: TokenType::Colon,
+                                ..
+                            })) => break,
+                            _ => self.parse_comma()?,
+                        }
+                    }
+                    _ => {
+                        types.push(Err(CompilerError::syntax(
+                            format!("Expected identifier, found {:?}", token),
+                            token.pos,
+                        )));
+                    }
+                },
+                Some(Err(e)) => types.push(Err(e)),
+                None => types.push(Err(CompilerError::syntax(
+                    "Unexpected EOF".into(),
+                    self.current_pos,
+                ))),
+            }
+        }
+
+        let parent_type = match &self.current_token {
+            Some(Ok(Token {
+                token: TokenType::Colon,
+                ..
+            })) => {
+                self.next_token();
+                match self.current_token.take() {
+                    Some(Ok(token)) => {
+                        let type_id = Identifier { id: token.clone() };
+                        self.next_token();
+                        self.parse_semicolon()?;
+                        let usage = self.analyzer.find_identifier(&type_id)?;
+
+                        match usage {
+                            Usage::Type(_) => Ok(type_id),
+                            _ => Err(CompilerError::semantic(
+                                "Identifier is not a type".into(),
+                                token.pos,
+                            )),
+                        }
+                    }
+                    _ => Err(CompilerError::syntax(
+                        "Expected identifier".into(),
+                        self.current_pos,
+                    )),
+                }
+            }
+            _ => Err(CompilerError::syntax(
+                "Expected ','".into(),
+                self.current_pos,
+            )),
+        };
+
+        match parent_type {
+            Ok(type_id) => {
+                let mut declarations = Vec::new();
+
+                for id in types {
+                    if let Ok(token) = id {
+                        declarations.push(TypeDeclaration {
+                            id: Identifier { id: token },
+                            parent: type_id.clone(),
+                        });
+                    } else if let Err(e) = id {
+                        self.errors.push(e);
+                    }
+                }
+
+                Ok(declarations)
+            }
+            Err(e) => Err(e),
+        }
+    }
+
+    fn parse_type_section(&mut self) -> Result<TypeSection, CompilerError> {
+        // [type
+        //      <type_declaration>
+        //      {<type_declaration>}
+        let mut declarations = Vec::new();
+        match &self.current_token {
+            Some(Ok(Token {
+                token: TokenType::TypeKeyword,
+                ..
+            })) => {
+                self.next_token();
+
+                loop {
+                    match &self.current_token {
+                        Some(Ok(Token {
+                            token: TokenType::BeginKeyword,
+                            ..
+                        }))
+                        | Some(Ok(Token {
+                            token: TokenType::VarKeyword,
+                            ..
+                        })) => break,
+                        _ => {
+                            let decl = self.parse_type_declaration();
+                            match decl {
+                                Ok(v) => {
+                                    for i in v {
+                                        let check_res = self.analyzer.check_type_declaration(i);
+                                        match check_res {
+                                            Ok(decl) => declarations.push(decl),
+                                            Err(e) => self.errors.push(e),
+                                        }
+                                    }
+                                }
+                                Err(e) => {
+                                    self.errors.push(e);
+                                    self.skip_until_starters();
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Ok(TypeSection {
+                    types: declarations,
+                })
+            }
+            Some(Ok(t)) => Err(CompilerError::syntax(
+                format!("Expected TYPE, found {:?}", t),
+                t.pos,
+            )),
+            Some(Err(e)) => Err(e.clone()),
+            _ => Err(CompilerError::syntax(
+                "Unexpected EOF".into(),
+                self.current_pos,
+            )),
+        }
+    }
+
     fn parse_var_declaration(&mut self) -> Result<Vec<VarDeclaration>, CompilerError> {
         // id {,id} : type_id
         let mut identifiers = Vec::new();
@@ -318,7 +468,7 @@ impl Parser {
                 match decl {
                     Ok(v) => {
                         for i in v {
-                            let check_res = self.analyzer.check_declaration(i);
+                            let check_res = self.analyzer.check_var_declaration(i);
                             match check_res {
                                 Ok(decl) => declarations.push(decl),
                                 Err(e) => self.errors.push(e),
@@ -450,7 +600,21 @@ impl Parser {
                 let id = self.parse_identifier()?;
                 // Semicolon check
                 self.parse_semicolon()?;
-                let var_section = Some(self.parse_var_section()?);
+
+                let type_section = match self.current_token {
+                    Some(Ok(Token {
+                        token: TokenType::TypeKeyword,
+                        ..
+                    })) => Some(self.parse_type_section()?),
+                    _ => None,
+                };
+                let var_section = match self.current_token {
+                    Some(Ok(Token {
+                        token: TokenType::VarKeyword,
+                        ..
+                    })) => Some(self.parse_var_section()?),
+                    _ => None,
+                };
                 let compound = self.parse_compound()?;
 
                 self.parse_period()?;
@@ -459,6 +623,7 @@ impl Parser {
                 Ok(Program {
                     identifier: id,
                     var_section,
+                    type_section,
                     compound,
                 })
             }
