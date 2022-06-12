@@ -165,10 +165,11 @@ impl Parser {
                 self.next_token();
                 match self.current_token.take() {
                     Some(Ok(token)) => {
-                        let type_id = Ok(Identifier { id: token });
+                        let type_id = Identifier { id: token };
                         self.next_token();
                         self.parse_semicolon()?;
-                        type_id
+                        self.analyzer.find_identifier(&type_id, &Usage::Type)?;
+                        Ok(type_id)
                     }
                     _ => Err(CompilerError::syntax(
                         "Expected identifier".into(),
@@ -234,24 +235,16 @@ impl Parser {
                         for i in v {
                             let check_res = self.analyzer.check_declaration(i);
                             match check_res {
-                                Ok(decl) => declarations.push(decl),
+                                Ok(decl) => {
+                                    declarations.push(decl)
+                                },
                                 Err(e) => self.errors.push(e)
                             }
                         }
                     }
                     Err(e) => {
                         self.errors.push(e);
-
-                        loop {
-                            if let Some(Ok(Token {
-                                token: TokenType::Identifier(_),
-                                ..
-                            })) = self.current_token
-                            {
-                                break;
-                            };
-                            self.next_token();
-                        }
+                        self.skip_until_starters();
                     }
                 }
 
@@ -510,7 +503,10 @@ impl Parser {
                     | Token {
                         token: TokenType::EndKeyword,
                         ..
-                    } => {
+                    }
+                    | Token {
+                        token: TokenType::BeginKeyword, ..} =>
+                    {
                         return;
                     }
                     _ => self.next_token(),
