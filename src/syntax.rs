@@ -41,7 +41,7 @@ pub struct VarAssignment {
 pub struct Term {
     pub(crate) factor: Factor,
     pub(crate) sub_term: Option<SubTerm>,
-    // pub(crate) term_type: Identifier,
+    pub(crate) term_type: String,
 }
 
 pub struct SubTerm {
@@ -161,6 +161,7 @@ impl fmt::Debug for Term {
         f.debug_struct("Term")
             .field("factor", &self.factor)
             .field("sub_term", &self.sub_term)
+            .field("term_type", &self.term_type)
             .finish()
     }
 }

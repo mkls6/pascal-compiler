@@ -84,9 +84,31 @@ impl Parser {
     }
 
     fn parse_term(&mut self) -> Result<Term, CompilerError> {
+        let factor = self.parse_factor()?;
+        let sub_term = self.parse_sub_term()?;
+
+        let factor_type = self.analyzer.get_factor_type(&factor)?;
+        let fact_type_str = match factor_type {
+            Usage::Variable(s) | Usage::Constant(s) => s,
+            _ => todo!(),
+        };
+        let sub_term_type;
+        if sub_term.is_some() {
+            sub_term_type = self
+                .analyzer
+                .get_sub_term_type(sub_term.as_ref().unwrap())?;
+        } else {
+            sub_term_type = String::new();
+        }
+
+        let term_type = self
+            .analyzer
+            .merge_types(&fact_type_str, &sub_term_type, (0, 0))?;
+
         let term = Term {
-            factor: self.parse_factor()?,
-            sub_term: self.parse_sub_term()?,
+            factor,
+            sub_term,
+            term_type,
         };
 
         Ok(term)
