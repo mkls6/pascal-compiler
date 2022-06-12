@@ -51,7 +51,6 @@ impl Analyzer {
                 Ok(usg.clone())
             }
             Factor::Expression(e) => Ok(Usage::Variable(e.expr_type.clone())),
-            _ => todo!(),
         }
     }
 
