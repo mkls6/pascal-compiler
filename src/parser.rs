@@ -176,6 +176,29 @@ impl Parser {
         }
     }
 
+    fn parse_comma(&mut self) -> Result<(), CompilerError> {
+        let tok = self.current_token.take();
+        self.next_token();
+
+        match tok {
+            Some(Ok(t)) => match t {
+                Token {
+                    token: TokenType::Comma,
+                    ..
+                } => Ok(()),
+                _ => Err(CompilerError::syntax(
+                    format!("Expected ',', found {:?}", t),
+                    t.pos,
+                )),
+            },
+            Some(Err(e)) => Err(e),
+            _ => Err(CompilerError::syntax(
+                "Unexpected EOF".into(),
+                self.current_pos,
+            )),
+        }
+    }
+
     fn parse_var_declaration(&mut self) -> Result<Vec<VarDeclaration>, CompilerError> {
         // id {,id} : type_id
         let mut identifiers = Vec::new();
@@ -192,10 +215,10 @@ impl Parser {
 
                         match &self.current_token {
                             Some(Ok(Token {
-                                token: TokenType::Comma,
+                                token: TokenType::Colon,
                                 ..
-                            })) => self.next_token(),
-                            _ => break,
+                            })) => break,
+                            _ => self.parse_comma()?,
                         }
                     }
                     _ => {
@@ -226,7 +249,7 @@ impl Parser {
                         self.parse_semicolon()?;
                         let usage = self.analyzer.find_identifier(&type_id)?;
                         match usage {
-                            Usage::Type => Ok(type_id),
+                            Usage::Type(_) => Ok(type_id),
                             _ => Err(CompilerError::semantic(
                                 "Identifier is not a type".into(),
                                 token.pos,

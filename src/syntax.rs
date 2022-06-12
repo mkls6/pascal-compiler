@@ -86,6 +86,10 @@ pub enum Expression {
     Relational(RelationalExpression),
 }
 
+pub struct TypeSection {
+    pub(crate) types: Vec<TypeDeclaration>,
+}
+
 pub struct Compound {
     pub(crate) statements: Vec<Statement>,
 }
@@ -94,6 +98,11 @@ pub enum Statement {
     Simple(VarAssignment),
     Cond(IfStatement),
     While(WhileLoop),
+}
+
+pub struct TypeDeclaration {
+    pub(crate) id: Identifier,
+    pub(crate) parent: Identifier,
 }
 
 pub struct VarDeclaration {
@@ -314,6 +323,23 @@ impl fmt::Debug for IfStatement {
             .field("condition", &self.condition)
             .field("statement", &self.statement)
             .field("else", &self.else_statement)
+            .finish()
+    }
+}
+
+impl fmt::Debug for TypeSection {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("TypeSection")
+            .field("declarations", &self.types)
+            .finish()
+    }
+}
+
+impl fmt::Debug for TypeDeclaration {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("TypeDeclaration")
+            .field("id", &self.id)
+            .field("definition", &self.parent)
             .finish()
     }
 }
