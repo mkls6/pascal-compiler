@@ -1,3 +1,4 @@
+use crate::analyzer::Analyzer;
 use crate::error::CompilerError;
 use crate::lexer::Lexer;
 use crate::syntax::*;
@@ -9,6 +10,7 @@ pub struct Parser {
     current_token: Option<Result<Token, CompilerError>>,
     current_pos: (usize, usize),
     pub(crate) errors: Vec<CompilerError>,
+    analyzer: Analyzer,
 }
 
 impl Parser {
@@ -18,6 +20,7 @@ impl Parser {
             current_token: None,
             errors: Vec::new(),
             current_pos: (0, 0),
+            analyzer: Analyzer::new(),
         };
 
         parser.next_token();
@@ -224,7 +227,11 @@ impl Parser {
                 match decl {
                     Ok(v) => {
                         for i in v {
-                            declarations.push(i);
+                            let check_res = self.analyzer.check_declaration(i);
+                            match check_res {
+                                Ok(decl) => declarations.push(decl),
+                                Err(e) => self.errors.push(e)
+                            }
                         }
                     }
                     Err(e) => {
@@ -350,6 +357,7 @@ impl Parser {
         // <procedures>
         // <compound>
         // end.
+        self.analyzer.enter_scope();
         match &self.current_token {
             Some(Ok(Token {
                 token: TokenType::ProgramKeyword,

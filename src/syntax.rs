@@ -1,4 +1,4 @@
-use crate::token::Token;
+use crate::token::{Token, TokenType};
 use std::fmt;
 
 pub enum Factor {
@@ -22,6 +22,15 @@ pub enum MultiplicativeOp {
 #[derive(Clone)]
 pub struct Identifier {
     pub(crate) id: Token, // TODO: type, usage, etc
+}
+
+impl Identifier {
+    pub fn get_id(&self) -> String {
+        match &self.id.token {
+            TokenType::Identifier(s) => s.clone(),
+            _ => "".into()
+        }
+    }
 }
 
 pub struct VarAssignment {
