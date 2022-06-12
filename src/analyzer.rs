@@ -144,9 +144,4 @@ impl Analyzer {
             _ => todo!(),
         }
     }
-
-    // pub fn check_expr_type(expr: &Expression) -> Result<(), CompilerError> {
-    //     let term_type = expr.term.term_type;
-    //     let sub_expr_type = match expr.sub_expr
-    // }
 }

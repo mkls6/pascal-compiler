@@ -638,6 +638,8 @@ impl Parser {
     fn parse_conditional(&mut self) -> Result<IfStatement, CompilerError> {
         self.parse_if()?;
         let condition = self.parse_expr()?;
+        self.analyzer
+            .check_expr(&condition, &String::from("boolean"), self.current_pos)?;
         self.parse_then()?;
         let statement = self.parse_statement()?;
         let else_ = self.parse_else()?;
