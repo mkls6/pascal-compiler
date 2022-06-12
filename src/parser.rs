@@ -84,7 +84,7 @@ impl Parser {
     }
 
     fn parse_term(&mut self) -> Result<Term, CompilerError> {
-        let factor = self.parse_factor()?;
+        let factor = Box::new(self.parse_factor()?);
         let sub_term = self.parse_sub_term()?;
 
         let factor_type = self.analyzer.get_factor_type(&factor)?;
@@ -96,7 +96,7 @@ impl Parser {
         if sub_term.is_some() {
             sub_term_type = self
                 .analyzer
-                .get_sub_term_type(sub_term.as_ref().unwrap())?;
+                .get_sub_term_type(&sub_term.as_ref().unwrap())?;
         } else {
             sub_term_type = String::new();
         }
@@ -114,7 +114,7 @@ impl Parser {
         Ok(term)
     }
 
-    fn parse_sub_term(&mut self) -> Result<Option<SubTerm>, CompilerError> {
+    fn parse_sub_term(&mut self) -> Result<Option<Box<SubTerm>>, CompilerError> {
         // TODO: this check probably should not be here
         match &self.current_token {
             Some(Ok(Token {
@@ -126,9 +126,9 @@ impl Parser {
                 match &self.current_token {
                     Some(Ok(t)) if t.is_mul_op() => {
                         let op = self.parse_multiplicative_op()?;
-                        let factor = self.parse_factor()?;
+                        let factor = Box::new(self.parse_factor()?);
                         let sub_term_res = self.parse_sub_term()?;
-                        let sub_term = sub_term_res.map(Box::new);
+                        let sub_term = sub_term_res;
 
                         let factor_type = self.analyzer.get_factor_type(&factor)?;
                         let fact_type_str = match factor_type {
@@ -152,12 +152,12 @@ impl Parser {
                         )?;
                         // let sub_term_type = self.analyzer.get_subterm_type(&sub_term)?;
 
-                        Ok(Some(SubTerm {
+                        Ok(Some(Box::new(SubTerm {
                             op,
                             factor,
                             sub_term,
                             sub_term_type: res,
-                        }))
+                        })))
                     }
                     Some(Ok(t)) if t.is_add_op() || t.is_expression_end() || t.is_rel_op() => {
                         Ok(None)
@@ -605,17 +605,17 @@ impl Parser {
                     Some(Ok(Token {
                         token: TokenType::TypeKeyword,
                         ..
-                    })) => Some(self.parse_type_section()?),
+                    })) => Some(Box::new(self.parse_type_section()?)),
                     _ => None,
                 };
                 let var_section = match self.current_token {
                     Some(Ok(Token {
                         token: TokenType::VarKeyword,
                         ..
-                    })) => Some(self.parse_var_section()?),
+                    })) => Some(Box::new(self.parse_var_section()?)),
                     _ => None,
                 };
-                let compound = self.parse_compound()?;
+                let compound = Box::new(self.parse_compound()?);
 
                 self.parse_period()?;
                 self.analyzer.leave_scope();
@@ -682,8 +682,8 @@ impl Parser {
         match &self.current_token {
             Some(Ok(t)) if t.is_expression_end() || t.is_rel_op() => Ok(None),
             Some(Ok(t)) if t.is_add_op() => {
-                let op = self.parse_additive_op()?;
-                let term = self.parse_term()?;
+                let op = Box::new(self.parse_additive_op()?);
+                let term = Box::new(self.parse_term()?);
                 let sub_expr_res = self.parse_sub_expr()?;
                 let sub_expr = sub_expr_res.map(Box::new);
 
@@ -745,12 +745,12 @@ impl Parser {
 
     fn parse_expr(&mut self) -> Result<Expression, CompilerError> {
         // Expr ::= <Simple Expr> | <Simple Expr> <Rel Op> <Simple Expr>
-        let first = self.parse_simple_expr()?;
+        let first = Box::new(self.parse_simple_expr()?);
 
         match &self.current_token {
             Some(Ok(token)) if token.is_rel_op() => {
-                let op = self.parse_relational_op()?;
-                let second = self.parse_simple_expr()?;
+                let op = Box::new(self.parse_relational_op()?);
+                let second = Box::new(self.parse_simple_expr()?);
                 self.analyzer.merge_types(
                     &first.expr_type,
                     &second.expr_type,
@@ -758,11 +758,11 @@ impl Parser {
                     true,
                 )?;
 
-                Ok(Expression::Relational(RelationalExpression {
+                Ok(Expression::Relational(Box::new(RelationalExpression {
                     first,
                     op,
                     second,
-                }))
+                })))
             }
             _ => Ok(Expression::Simple(first)),
         }
@@ -825,7 +825,7 @@ impl Parser {
 
     fn parse_conditional(&mut self) -> Result<IfStatement, CompilerError> {
         self.parse_if()?;
-        let condition = self.parse_expr()?;
+        let condition = Box::new(self.parse_expr()?);
         self.analyzer
             .check_expr(&condition, &String::from("boolean"), self.current_pos)?;
         self.parse_then()?;
@@ -1059,7 +1059,7 @@ impl Parser {
             self.next_token();
         };
 
-        let term = self.parse_term()?;
+        let term = Box::new(self.parse_term()?);
         let sub_expr = self.parse_sub_expr()?;
         let sub_expr_type;
 
@@ -1116,8 +1116,8 @@ impl Parser {
                 self.next_token();
 
                 let assignment = VarAssignment {
-                    name: id,
-                    value: self.parse_expr()?,
+                    name: Box::new(id),
+                    value: Box::new(self.parse_expr()?),
                 };
 
                 self.parse_semicolon()?;

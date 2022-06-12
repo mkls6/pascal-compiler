@@ -150,7 +150,8 @@ impl Analyzer {
         let var_type = self.find_identifier(var_id)?;
         let mut value_type = String::from("boolean");
 
-        match &a.value {
+        // Borrow what's inside the box
+        match &*a.value {
             Expression::Simple(expr) => value_type = expr.expr_type.clone(),
             Expression::Relational(_) => (),
         };

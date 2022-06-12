@@ -45,45 +45,45 @@ impl Identifier {
 }
 
 pub struct VarAssignment {
-    pub(crate) name: Identifier,
-    pub(crate) value: Expression,
+    pub(crate) name: Box<Identifier>,
+    pub(crate) value: Box<Expression>,
 }
 
 pub struct Term {
-    pub(crate) factor: Factor,
-    pub(crate) sub_term: Option<SubTerm>,
+    pub(crate) factor: Box<Factor>,
+    pub(crate) sub_term: Option<Box<SubTerm>>,
     pub(crate) term_type: String,
 }
 
 pub struct SubTerm {
     pub(crate) op: MultiplicativeOp,
-    pub(crate) factor: Factor,
+    pub(crate) factor: Box<Factor>,
     pub(crate) sub_term_type: String,
     pub(crate) sub_term: Option<Box<SubTerm>>,
 }
 
 pub struct SubExpression {
-    pub(crate) op: AdditiveOp,
-    pub(crate) term: Term,
+    pub(crate) op: Box<AdditiveOp>,
+    pub(crate) term: Box<Term>,
     pub(crate) sub_expr_type: String,
     pub(crate) sub_expr: Option<Box<SubExpression>>,
 }
 
 pub struct SimpleExpression {
-    pub(crate) term: Term,
+    pub(crate) term: Box<Term>,
     pub(crate) sub_expr: Option<SubExpression>,
     pub(crate) expr_type: String,
 }
 
 pub struct RelationalExpression {
-    pub(crate) first: SimpleExpression,
-    pub(crate) op: RelationalOp,
-    pub(crate) second: SimpleExpression,
+    pub(crate) first: Box<SimpleExpression>,
+    pub(crate) op: Box<RelationalOp>,
+    pub(crate) second: Box<SimpleExpression>,
 }
 
 pub enum Expression {
-    Simple(SimpleExpression),
-    Relational(RelationalExpression),
+    Simple(Box<SimpleExpression>),
+    Relational(Box<RelationalExpression>),
 }
 
 pub struct TypeSection {
@@ -116,13 +116,13 @@ pub struct VarSection {
 
 pub struct Program {
     pub(crate) identifier: Identifier,
-    pub(crate) var_section: Option<VarSection>,
-    pub(crate) type_section: Option<TypeSection>,
-    pub(crate) compound: Compound,
+    pub(crate) var_section: Option<Box<VarSection>>,
+    pub(crate) type_section: Option<Box<TypeSection>>,
+    pub(crate) compound: Box<Compound>,
 }
 
 pub struct IfStatement {
-    pub(crate) condition: Expression,
+    pub(crate) condition: Box<Expression>,
     pub(crate) statement: Box<Statement>,
     pub(crate) else_statement: Option<Box<Statement>>,
 }
@@ -146,6 +146,7 @@ impl fmt::Debug for Program {
         f.debug_struct("Program")
             .field("identifier", &self.identifier)
             .field("var_section", &self.var_section)
+            .field("type_section", &self.type_section)
             .field("compound", &self.compound)
             .finish()
     }
