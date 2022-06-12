@@ -54,7 +54,7 @@ pub struct SubTerm {
 pub struct SubExpression {
     pub(crate) op: AdditiveOp,
     pub(crate) term: Term,
-    // pub(crate) sub_expr_type: Identifier,
+    pub(crate) sub_expr_type: String,
     pub(crate) sub_expr: Option<Box<SubExpression>>,
 }
 
@@ -202,6 +202,7 @@ impl fmt::Debug for SubExpression {
             .field("op", &self.op)
             .field("term", &self.term)
             .field("sub_expr", &self.sub_expr)
+            .field("sub_expr_type", &self.sub_expr_type)
             .finish()
     }
 }

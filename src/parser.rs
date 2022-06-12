@@ -485,7 +485,25 @@ impl Parser {
                 let sub_expr_res = self.parse_sub_expr()?;
                 let sub_expr = sub_expr_res.map(Box::new);
 
-                Ok(Some(SubExpression { op, term, sub_expr }))
+                let term_type = &term.term_type;
+                let sub_expr_type;
+
+                if sub_expr.is_some() {
+                    sub_expr_type = sub_expr.as_ref().unwrap().sub_expr_type.clone();
+                } else {
+                    sub_expr_type = String::new();
+                }
+
+                let sub_expr_type = self
+                    .analyzer
+                    .merge_types(term_type, &sub_expr_type, (0, 0))?;
+
+                Ok(Some(SubExpression {
+                    op,
+                    term,
+                    sub_expr,
+                    sub_expr_type,
+                }))
             }
             Some(Ok(t)) => Err(CompilerError::syntax(
                 format!("Expected +, - or statement end, found {:?}", t),
