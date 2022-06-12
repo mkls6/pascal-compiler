@@ -79,9 +79,16 @@ impl Analyzer {
         type1: &String,
         type2: &String,
         pos: (usize, usize),
+        strong: bool,
     ) -> Result<String, CompilerError> {
         match (type1.as_str(), type2.as_str()) {
-            ("integer", "real") | ("real", "integer") => Ok("real".into()),
+            ("integer", "real") | ("real", "integer") => {
+                if strong {
+                    Err(CompilerError::semantic("Type mismatch".into(), pos))
+                } else {
+                    Ok("real".into())
+                }
+            }
             (x, y) if x == y => Ok(x.into()),
             (x, "") => Ok(x.into()),
             _ => Err(CompilerError::semantic("Type mismatch".into(), pos)),
@@ -100,7 +107,22 @@ impl Analyzer {
             Ok(factor_type_str)
         } else {
             let sub_term_type = self.get_sub_term_type(sub_term.sub_term.as_ref().unwrap())?;
-            self.merge_types(&factor_type_str, &sub_term_type, (0, 0))
+            self.merge_types(&factor_type_str, &sub_term_type, (0, 0), false)
+        }
+    }
+
+    pub fn check_assignment(&self, a: VarAssignment) -> Result<VarAssignment, CompilerError> {
+        let var_id = &a.name;
+        let var_type = self.find_identifier(var_id)?;
+        let value_type = &a.value.expr_type;
+
+        match var_type {
+            Usage::Variable(s) => {
+                self.merge_types(s, value_type, a.name.id.pos, true)?;
+                Ok(a)
+            }
+            // We can't actually get here but Rust enforces to do check anyway
+            _ => todo!(),
         }
     }
 

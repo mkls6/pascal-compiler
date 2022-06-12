@@ -103,7 +103,7 @@ impl Parser {
 
         let term_type = self
             .analyzer
-            .merge_types(&fact_type_str, &sub_term_type, (0, 0))?;
+            .merge_types(&fact_type_str, &sub_term_type, (0, 0), false)?;
 
         let term = Term {
             factor,
@@ -146,9 +146,9 @@ impl Parser {
                     sub_term_type = String::new();
                 }
 
-                let res = self
-                    .analyzer
-                    .merge_types(&fact_type_str, &sub_term_type, (0, 0))?;
+                let res =
+                    self.analyzer
+                        .merge_types(&fact_type_str, &sub_term_type, (0, 0), false)?;
                 // let sub_term_type = self.analyzer.get_subterm_type(&sub_term)?;
 
                 Ok(Some(SubTerm {
@@ -494,9 +494,9 @@ impl Parser {
                     sub_expr_type = String::new();
                 }
 
-                let sub_expr_type = self
-                    .analyzer
-                    .merge_types(term_type, &sub_expr_type, (0, 0))?;
+                let sub_expr_type =
+                    self.analyzer
+                        .merge_types(term_type, &sub_expr_type, (0, 0), false)?;
 
                 Ok(Some(SubExpression {
                     op,
@@ -625,9 +625,9 @@ impl Parser {
             sub_expr_type = String::new();
         }
 
-        let expr_type = self
-            .analyzer
-            .merge_types(&term.term_type, &sub_expr_type, (0, 0))?;
+        let expr_type =
+            self.analyzer
+                .merge_types(&term.term_type, &sub_expr_type, (0, 0), false)?;
 
         let expr = Expression {
             term,
@@ -673,8 +673,7 @@ impl Parser {
                 };
 
                 self.parse_semicolon()?;
-
-                Ok(assignment)
+                Ok(self.analyzer.check_assignment(assignment)?)
             }
             Some(Ok(t)) => Err(CompilerError::syntax(
                 format!("Expected :=, found {:?}", t),
