@@ -552,10 +552,6 @@ impl Parser {
             match &self.current_token {
                 Some(Ok(token)) => match token {
                     Token {
-                        token: TokenType::Identifier(_),
-                        ..
-                    }
-                    | Token {
                         token: TokenType::EndKeyword,
                         ..
                     }
@@ -565,6 +561,19 @@ impl Parser {
                     } => {
                         return;
                     }
+                    Token {
+                        token: TokenType::Identifier(_),
+                        ..
+                    } => match self.lexer.peek() {
+                        Some(Ok(Token {
+                            token: TokenType::AssignOp,
+                            ..
+                        })) => return,
+                        _ => {
+                            self.next_token();
+                            continue;
+                        }
+                    },
                     _ => self.next_token(),
                 },
                 Some(Err(e)) => {
