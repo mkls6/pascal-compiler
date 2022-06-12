@@ -3,22 +3,22 @@ use crate::token::{Token, TokenType};
 use std::collections::HashMap;
 use std::fmt;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub enum Usage {
-    Constant,
+    Constant(String),
     Type,
     Program,
-    Variable,
+    Variable(String),
     // Procedure, function…
 }
 
 impl fmt::Debug for Usage {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Usage::Constant => write!(f, "constant"),
+            Usage::Constant(s) => write!(f, "constant of type \"{}\"", s),
             Usage::Type => write!(f, "type"),
             Usage::Program => write!(f, "program"),
-            Usage::Variable => write!(f, "variable")
+            Usage::Variable(s) => write!(f, "variable of type \"{}\"", s),
         }
     }
 }
@@ -34,14 +34,14 @@ impl Scope {
         }
     }
     pub fn default() -> Self {
-        let identifiers = HashMap::from(
-            [("integer".into(), Usage::Type),
-                ("real".into(), Usage::Type),
-                ("char".into(), Usage::Type),
-                ("boolean".into(), Usage::Type),
-                ("true".into(), Usage::Constant),
-                ("false".into(), Usage::Constant)]
-        );
+        let identifiers = HashMap::from([
+            ("integer".into(), Usage::Type),
+            ("real".into(), Usage::Type),
+            ("char".into(), Usage::Type),
+            ("boolean".into(), Usage::Type),
+            ("true".into(), Usage::Constant("boolean".into())),
+            ("false".into(), Usage::Constant("boolean".into())),
+        ]);
 
         Self { identifiers }
     }
@@ -57,6 +57,7 @@ impl Scope {
                     token: TokenType::Identifier(s),
                     ..
                 },
+            ..
         } = id
         {
             self.identifiers.insert(s.clone(), usage);

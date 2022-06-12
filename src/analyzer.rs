@@ -21,7 +21,7 @@ impl Analyzer {
         self.scopes.pop();
     }
 
-    /// Check if identifier is already defined
+    /// Check if identifier is already defined and add in case it is not
     pub fn check_declaration(
         &mut self,
         decl: VarDeclaration,
@@ -36,13 +36,25 @@ impl Analyzer {
                 decl.id.id.pos,
             )),
             None => {
-                cur_scope.insert(&decl.id, Usage::Variable);
+                cur_scope.insert(&decl.id, Usage::Variable(decl.type_name.get_id()));
                 Ok(decl)
             }
         }
     }
 
-    pub fn find_identifier(&self, id: &Identifier, usg: &Usage) -> Result<(), CompilerError> {
+    pub fn get_factor_type(&self, f: &Factor) -> Result<Usage, CompilerError> {
+        match f {
+            Factor::Real(_) => Ok(Usage::Constant("real".into())),
+            Factor::Integer(_) => Ok(Usage::Constant("integer".into())),
+            Factor::Identifier(s) => {
+                let usg = self.find_identifier(s)?;
+                Ok(usg.clone())
+            }
+            _ => todo!(),
+        }
+    }
+
+    pub fn find_identifier(&self, id: &Identifier) -> Result<&Usage, CompilerError> {
         let mut scopes = self.scopes.iter().rev();
 
         loop {
@@ -55,16 +67,45 @@ impl Analyzer {
                 ));
             } else {
                 match cur_scope.unwrap().get(id.get_id()) {
-                    Some(u) if u == usg => break Ok(()),
-                    Some(u) => {
-                        break Err(CompilerError::semantic(
-                            format!("Identifier<{:?}> found, expected <{:?}>", u, usg),
-                            id.id.pos,
-                        ))
-                    }
+                    Some(u) => break Ok(u),
                     None => continue,
                 }
             }
         }
     }
+
+    pub fn merge_types(
+        &self,
+        type1: &String,
+        type2: &String,
+        pos: (usize, usize),
+    ) -> Result<String, CompilerError> {
+        match (type1.as_str(), type2.as_str()) {
+            ("integer", "real") | ("real", "integer") => Ok("real".into()),
+            (x, y) if x == y => Ok(x.into()),
+            (x, "") => Ok(x.into()),
+            _ => Err(CompilerError::semantic("Type mismatch".into(), pos)),
+        }
+    }
+
+    pub fn get_sub_term_type(&self, sub_term: &SubTerm) -> Result<String, CompilerError> {
+        // Type of subterm is its factor's type or merge with inner subterm type
+        let usg = self.get_factor_type(&sub_term.factor)?;
+        let factor_type_str = match usg {
+            Usage::Constant(s) | Usage::Variable(s) => s,
+            _ => todo!(),
+        };
+
+        if sub_term.sub_term.is_none() {
+            Ok(factor_type_str)
+        } else {
+            let sub_term_type = self.get_sub_term_type(sub_term.sub_term.as_ref().unwrap())?;
+            self.merge_types(&factor_type_str, &sub_term_type, (0, 0))
+        }
+    }
+
+    // pub fn check_expr_type(expr: &Expression) -> Result<(), CompilerError> {
+    //     let term_type = expr.term.term_type;
+    //     let sub_expr_type = match expr.sub_expr
+    // }
 }

@@ -1,10 +1,10 @@
 use crate::analyzer::Analyzer;
 use crate::error::CompilerError;
 use crate::lexer::Lexer;
+use crate::scope::Usage;
 use crate::syntax::*;
 use crate::token::{Token, TokenType};
 use std::iter::Peekable;
-use crate::scope::Usage;
 
 pub struct Parser {
     lexer: Peekable<Lexer>,
@@ -53,9 +53,17 @@ impl Parser {
                     ..
                 } => {
                     let id = Identifier { id: token.clone() };
-                    self.analyzer.find_identifier(&id, &Usage::Variable)?;
-                    Ok(Factor::Identifier(Identifier { id: token.clone() }))
-                },
+                    let usage = self.analyzer.find_identifier(&id)?;
+                    match usage {
+                        Usage::Variable(_) => {
+                            Ok(Factor::Identifier(Identifier { id: token.clone() }))
+                        }
+                        _ => Err(CompilerError::semantic(
+                            "Identifier is not a variable".into(),
+                            token.pos,
+                        )),
+                    }
+                }
                 Token {
                     token: TokenType::LBrace,
                     ..
@@ -96,15 +104,36 @@ impl Parser {
 
         match &self.current_token {
             Some(Ok(t)) if t.is_mul_op() => {
+                let pos = t.pos;
                 let op = self.parse_multiplicative_op()?;
                 let factor = self.parse_factor()?;
                 let sub_term_res = self.parse_sub_term()?;
                 let sub_term = sub_term_res.map(Box::new);
 
+                let factor_type = self.analyzer.get_factor_type(&factor)?;
+                let fact_type_str = match factor_type {
+                    Usage::Variable(s) | Usage::Constant(s) => s,
+                    _ => todo!(),
+                };
+                let sub_term_type;
+                if sub_term.is_some() {
+                    sub_term_type = self
+                        .analyzer
+                        .get_sub_term_type(sub_term.as_ref().unwrap())?;
+                } else {
+                    sub_term_type = String::new();
+                }
+
+                let res = self
+                    .analyzer
+                    .merge_types(&fact_type_str, &sub_term_type, (0, 0))?;
+                // let sub_term_type = self.analyzer.get_subterm_type(&sub_term)?;
+
                 Ok(Some(SubTerm {
                     op,
                     factor,
                     sub_term,
+                    sub_term_type: res,
                 }))
             }
             Some(Ok(t)) if t.is_add_op() || t.is_expression_end() => Ok(None),
@@ -165,11 +194,17 @@ impl Parser {
                 self.next_token();
                 match self.current_token.take() {
                     Some(Ok(token)) => {
-                        let type_id = Identifier { id: token };
+                        let type_id = Identifier { id: token.clone() };
                         self.next_token();
                         self.parse_semicolon()?;
-                        self.analyzer.find_identifier(&type_id, &Usage::Type)?;
-                        Ok(type_id)
+                        let usage = self.analyzer.find_identifier(&type_id)?;
+                        match usage {
+                            Usage::Type => Ok(type_id),
+                            _ => Err(CompilerError::semantic(
+                                "Identifier is not a type".into(),
+                                token.pos,
+                            )),
+                        }
                     }
                     _ => Err(CompilerError::syntax(
                         "Expected identifier".into(),
@@ -235,10 +270,8 @@ impl Parser {
                         for i in v {
                             let check_res = self.analyzer.check_declaration(i);
                             match check_res {
-                                Ok(decl) => {
-                                    declarations.push(decl)
-                                },
-                                Err(e) => self.errors.push(e)
+                                Ok(decl) => declarations.push(decl),
+                                Err(e) => self.errors.push(e),
                             }
                         }
                     }
@@ -505,8 +538,9 @@ impl Parser {
                         ..
                     }
                     | Token {
-                        token: TokenType::BeginKeyword, ..} =>
-                    {
+                        token: TokenType::BeginKeyword,
+                        ..
+                    } => {
                         return;
                     }
                     _ => self.next_token(),

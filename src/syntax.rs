@@ -21,14 +21,14 @@ pub enum MultiplicativeOp {
 
 #[derive(Clone)]
 pub struct Identifier {
-    pub(crate) id: Token, // TODO: type, usage, etc
+    pub(crate) id: Token,
 }
 
 impl Identifier {
     pub fn get_id(&self) -> String {
         match &self.id.token {
             TokenType::Identifier(s) => s.clone(),
-            _ => "".into()
+            _ => "".into(),
         }
     }
 }
@@ -41,23 +41,27 @@ pub struct VarAssignment {
 pub struct Term {
     pub(crate) factor: Factor,
     pub(crate) sub_term: Option<SubTerm>,
+    // pub(crate) term_type: Identifier,
 }
 
 pub struct SubTerm {
     pub(crate) op: MultiplicativeOp,
     pub(crate) factor: Factor,
+    pub(crate) sub_term_type: String,
     pub(crate) sub_term: Option<Box<SubTerm>>,
 }
 
 pub struct SubExpression {
     pub(crate) op: AdditiveOp,
     pub(crate) term: Term,
+    // pub(crate) sub_expr_type: Identifier,
     pub(crate) sub_expr: Option<Box<SubExpression>>,
 }
 
 pub struct Expression {
     pub(crate) term: Term,
     pub(crate) sub_expr: Option<SubExpression>,
+    // pub(crate) expr_type: Identifier,
 }
 
 pub struct Compound {
@@ -167,6 +171,7 @@ impl fmt::Debug for SubTerm {
             .field("op", &self.op)
             .field("factor", &self.factor)
             .field("sub_term", &self.sub_term)
+            .field("sub_term_type", &self.sub_term_type)
             .finish()
     }
 }
