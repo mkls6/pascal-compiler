@@ -115,11 +115,16 @@ impl Analyzer {
     pub fn check_assignment(&self, a: VarAssignment) -> Result<VarAssignment, CompilerError> {
         let var_id = &a.name;
         let var_type = self.find_identifier(var_id)?;
-        let value_type = &a.value.expr_type;
+        let mut value_type = String::from("boolean");
+
+        match &a.value {
+            Expression::Simple(expr) => value_type = expr.expr_type.clone(),
+            Expression::Relational(_) => (),
+        };
 
         match var_type {
             Usage::Variable(s) => {
-                self.merge_types(s, value_type, a.name.id.pos, true)?;
+                self.merge_types(s, &value_type, a.name.id.pos, true)?;
                 Ok(a)
             }
             // We can't actually get here but Rust enforces to do check anyway

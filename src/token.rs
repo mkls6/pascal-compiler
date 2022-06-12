@@ -10,6 +10,17 @@ impl Token {
     pub fn new(token: TokenType, pos: (usize, usize)) -> Self {
         Token { token, pos }
     }
+    pub fn is_rel_op(&self) -> bool {
+        matches!(
+            self.token,
+            TokenType::BiggerEq
+                | TokenType::Bigger
+                | TokenType::Less
+                | TokenType::LessEq
+                | TokenType::Eq
+                | TokenType::UnEq
+        )
+    }
     pub fn is_mul_op(&self) -> bool {
         matches!(
             self.token,
@@ -48,6 +59,12 @@ pub enum TokenType {
     MulOp,
     DivOp,
     ModOp,
+    Bigger,
+    Less,
+    BiggerEq,
+    LessEq,
+    Eq,
+    UnEq,
     AssignOp,
     Colon,
     Period,
@@ -77,6 +94,12 @@ impl fmt::Display for TokenType {
             TokenType::MulOp => write!(f, "Operator('*')"),
             TokenType::DivOp => write!(f, "Operator('div')"),
             TokenType::ModOp => write!(f, "Operator('mod')"),
+            TokenType::Eq => write!(f, "="),
+            TokenType::UnEq => write!(f, "<>"),
+            TokenType::Bigger => write!(f, ">"),
+            TokenType::Less => write!(f, "<"),
+            TokenType::BiggerEq => write!(f, ">="),
+            TokenType::LessEq => write!(f, "<="),
             TokenType::Identifier(s) => write!(f, "Identifier('{}')", s),
             TokenType::BeginKeyword => write!(f, "'BEGIN' keyword"),
             TokenType::EndKeyword => write!(f, "'END' keyword"),

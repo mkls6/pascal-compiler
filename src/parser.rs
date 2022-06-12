@@ -67,9 +67,9 @@ impl Parser {
                 Token {
                     token: TokenType::LBrace,
                     ..
-                } => Ok(Factor::Expression(Box::new(self.parse_expr()?))),
+                } => Ok(Factor::Expression(Box::new(self.parse_simple_expr()?))),
                 tok => Err(CompilerError::syntax(
-                    format!("Expected int or real literal, found {:?}", tok),
+                    format!("Expected literal or identifier, found {:?}", tok),
                     tok.pos,
                 )),
             },
@@ -101,9 +101,9 @@ impl Parser {
             sub_term_type = String::new();
         }
 
-        let term_type = self
-            .analyzer
-            .merge_types(&fact_type_str, &sub_term_type, self.current_pos, false)?;
+        let term_type =
+            self.analyzer
+                .merge_types(&fact_type_str, &sub_term_type, self.current_pos, false)?;
 
         let term = Term {
             factor,
@@ -116,57 +116,63 @@ impl Parser {
 
     fn parse_sub_term(&mut self) -> Result<Option<SubTerm>, CompilerError> {
         // TODO: this check probably should not be here
-        if let Some(Ok(Token {
-            token: TokenType::RBrace,
-            ..
-        })) = self.current_token
-        {
-            return Ok(None);
-        };
-
         match &self.current_token {
-            Some(Ok(t)) if t.is_mul_op() => {
-                let op = self.parse_multiplicative_op()?;
-                let factor = self.parse_factor()?;
-                let sub_term_res = self.parse_sub_term()?;
-                let sub_term = sub_term_res.map(Box::new);
+            Some(Ok(Token {
+                token: TokenType::RBrace,
+                ..
+            })) => Ok(None),
+            Some(Ok(tok)) if tok.is_rel_op() => Ok(None),
+            _ => {
+                match &self.current_token {
+                    Some(Ok(t)) if t.is_mul_op() => {
+                        let op = self.parse_multiplicative_op()?;
+                        let factor = self.parse_factor()?;
+                        let sub_term_res = self.parse_sub_term()?;
+                        let sub_term = sub_term_res.map(Box::new);
 
-                let factor_type = self.analyzer.get_factor_type(&factor)?;
-                let fact_type_str = match factor_type {
-                    Usage::Variable(s) | Usage::Constant(s) => s,
-                    _ => todo!(),
-                };
-                let sub_term_type;
-                if sub_term.is_some() {
-                    sub_term_type = self
-                        .analyzer
-                        .get_sub_term_type(sub_term.as_ref().unwrap())?;
-                } else {
-                    sub_term_type = String::new();
+                        let factor_type = self.analyzer.get_factor_type(&factor)?;
+                        let fact_type_str = match factor_type {
+                            Usage::Variable(s) | Usage::Constant(s) => s,
+                            _ => todo!(),
+                        };
+                        let sub_term_type;
+                        if sub_term.is_some() {
+                            sub_term_type = self
+                                .analyzer
+                                .get_sub_term_type(sub_term.as_ref().unwrap())?;
+                        } else {
+                            sub_term_type = String::new();
+                        }
+
+                        let res = self.analyzer.merge_types(
+                            &fact_type_str,
+                            &sub_term_type,
+                            self.current_pos,
+                            false,
+                        )?;
+                        // let sub_term_type = self.analyzer.get_subterm_type(&sub_term)?;
+
+                        Ok(Some(SubTerm {
+                            op,
+                            factor,
+                            sub_term,
+                            sub_term_type: res,
+                        }))
+                    }
+                    Some(Ok(t)) if t.is_add_op() || t.is_expression_end() || t.is_rel_op() => {
+                        Ok(None)
+                    }
+                    Some(Ok(t)) => Err(CompilerError::syntax(
+                        format!("Expected *, div or mod, found {:?}", t),
+                        t.pos,
+                    )),
+                    Some(Err(e)) => Err(e.clone()),
+                    None => Err(CompilerError::syntax(
+                        "Unexpected EOF".into(),
+                        self.current_pos,
+                    )),
                 }
-
-                let res =
-                    self.analyzer
-                        .merge_types(&fact_type_str, &sub_term_type, self.current_pos, false)?;
-                // let sub_term_type = self.analyzer.get_subterm_type(&sub_term)?;
-
-                Ok(Some(SubTerm {
-                    op,
-                    factor,
-                    sub_term,
-                    sub_term_type: res,
-                }))
             }
-            Some(Ok(t)) if t.is_add_op() || t.is_expression_end() => Ok(None),
-            Some(Ok(t)) => Err(CompilerError::syntax(
-                format!("Expected *, div or mod, found {:?}", t),
-                t.pos,
-            )),
-            Some(Err(e)) => Err(e.clone()),
-            None => Err(CompilerError::syntax(
-                "Unexpected EOF".into(),
-                self.current_pos,
-            )),
         }
     }
 
@@ -364,6 +370,8 @@ impl Parser {
                 } = t
                 {
                     Ok(())
+                } else if t.is_rel_op() {
+                    Ok(())
                 } else {
                     Err(CompilerError::syntax(
                         format!("Expected ';', found {:?}", t),
@@ -484,7 +492,7 @@ impl Parser {
 
     fn parse_sub_expr(&mut self) -> Result<Option<SubExpression>, CompilerError> {
         match &self.current_token {
-            Some(Ok(t)) if t.is_expression_end() => Ok(None),
+            Some(Ok(t)) if t.is_expression_end() || t.is_rel_op() => Ok(None),
             Some(Ok(t)) if t.is_add_op() => {
                 let op = self.parse_additive_op()?;
                 let term = self.parse_term()?;
@@ -500,9 +508,12 @@ impl Parser {
                     sub_expr_type = String::new();
                 }
 
-                let sub_expr_type =
-                    self.analyzer
-                        .merge_types(term_type, &sub_expr_type, self.current_pos, false)?;
+                let sub_expr_type = self.analyzer.merge_types(
+                    term_type,
+                    &sub_expr_type,
+                    self.current_pos,
+                    false,
+                )?;
 
                 Ok(Some(SubExpression {
                     op,
@@ -533,6 +544,31 @@ impl Parser {
                 "Illegal statement".into(),
                 self.current_pos,
             )),
+        }
+    }
+
+    fn parse_expr(&mut self) -> Result<Expression, CompilerError> {
+        // Expr ::= <Simple Expr> | <Simple Expr> <Rel Op> <Simple Expr>
+        let first = self.parse_simple_expr()?;
+
+        match &self.current_token {
+            Some(Ok(token)) if token.is_rel_op() => {
+                let op = self.parse_relational_op()?;
+                let second = self.parse_simple_expr()?;
+                self.analyzer.merge_types(
+                    &first.expr_type,
+                    &second.expr_type,
+                    self.current_pos,
+                    true,
+                )?;
+
+                Ok(Expression::Relational(RelationalExpression {
+                    first,
+                    op,
+                    second,
+                }))
+            }
+            _ => Ok(Expression::Simple(first)),
         }
     }
 
@@ -609,7 +645,72 @@ impl Parser {
         }
     }
 
-    fn parse_expr(&mut self) -> Result<Expression, CompilerError> {
+    fn parse_relational_op(&mut self) -> Result<RelationalOp, CompilerError> {
+        let op = match &self.current_token {
+            Some(Ok(Token {
+                token: TokenType::BiggerEq,
+                ..
+            })) => {
+                self.next_token();
+                Ok(RelationalOp::BiggerEq)
+            }
+            Some(Ok(Token {
+                token: TokenType::Bigger,
+                ..
+            })) => {
+                self.next_token();
+                Ok(RelationalOp::Bigger)
+            }
+            Some(Ok(Token {
+                token: TokenType::LessEq,
+                ..
+            })) => {
+                self.next_token();
+                Ok(RelationalOp::LessEq)
+            }
+            Some(Ok(Token {
+                token: TokenType::Less,
+                ..
+            })) => {
+                self.next_token();
+                Ok(RelationalOp::Less)
+            }
+            Some(Ok(Token {
+                token: TokenType::Eq,
+                ..
+            })) => {
+                self.next_token();
+                Ok(RelationalOp::Eq)
+            }
+            Some(Ok(Token {
+                token: TokenType::UnEq,
+                ..
+            })) => {
+                self.next_token();
+                Ok(RelationalOp::UnEq)
+            }
+            Some(Ok(Token {
+                token: TokenType::Identifier(s),
+                pos,
+            })) => Err(CompilerError::syntax(
+                format!("Expected ; but found identifier {:?}", s),
+                *pos,
+            )),
+            Some(Ok(t)) => Err(CompilerError::syntax(
+                format!("Expected *, div or mod, found {:?}", t),
+                t.pos,
+            )),
+            Some(Err(e)) => Err((*e).clone()),
+            None => Err(CompilerError::syntax(
+                "Unexpected EOF".into(),
+                self.current_pos,
+            )),
+        };
+
+        op
+    }
+
+    fn parse_simple_expr(&mut self) -> Result<SimpleExpression, CompilerError> {
         let mut inside_braces = false;
 
         if let &Some(Ok(Token {
@@ -633,17 +734,17 @@ impl Parser {
 
         let pos = self.current_pos;
 
-        let expr_type =
-            self.analyzer
-                .merge_types(&term.term_type, &sub_expr_type, pos, false)?;
+        let expr_type = self
+            .analyzer
+            .merge_types(&term.term_type, &sub_expr_type, pos, false)?;
 
-        let expr = Expression {
+        let expr = SimpleExpression {
             term,
             sub_expr,
             expr_type,
         };
 
-        if inside_braces {
+        let expr = if inside_braces {
             match self.current_token.clone() {
                 Some(Ok(Token {
                     token: TokenType::RBrace,
@@ -663,7 +764,9 @@ impl Parser {
             }
         } else {
             Ok(expr)
-        }
+        };
+
+        expr
     }
     fn parse_assignment(&mut self) -> Result<VarAssignment, CompilerError> {
         let id = self.parse_identifier()?;
@@ -726,7 +829,10 @@ impl Parser {
                 self.next_token();
                 Ok(MultiplicativeOp::Mod)
             }
-            Some(Ok(Token { token: TokenType::AndOp, .. })) => {
+            Some(Ok(Token {
+                token: TokenType::AndOp,
+                ..
+            })) => {
                 self.next_token();
                 Ok(MultiplicativeOp::And)
             }

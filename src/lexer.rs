@@ -147,6 +147,33 @@ impl Lexer {
                 '(' => Ok(Token::new(TokenType::LBrace, pos)),
                 ')' => Ok(Token::new(TokenType::RBrace, pos)),
                 ',' => Ok(Token::new(TokenType::Comma, pos)),
+                '=' => Ok(Token::new(TokenType::Eq, pos)),
+                '>' => {
+                    self.chars.next();
+
+                    match self.chars.current_char() {
+                        Some('=') => {
+                            self.chars.next();
+                            Ok(Token::new(TokenType::BiggerEq, pos))
+                        }
+                        _ => Ok(Token::new(TokenType::Bigger, pos)),
+                    }
+                }
+                '<' => {
+                    self.chars.next();
+
+                    match self.chars.current_char() {
+                        Some('=') => {
+                            self.chars.next();
+                            Ok(Token::new(TokenType::LessEq, pos))
+                        }
+                        Some('>') => {
+                            self.chars.next();
+                            Ok(Token::new(TokenType::UnEq, pos))
+                        }
+                        _ => Ok(Token::new(TokenType::Less, pos)),
+                    }
+                }
                 '\'' => {
                     // Read chars until string literal is closed
                     let literal: String = self

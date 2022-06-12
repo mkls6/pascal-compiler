@@ -5,7 +5,7 @@ pub enum Factor {
     Integer(Token),
     Real(Token),
     Identifier(Identifier),
-    Expression(Box<Expression>),
+    Expression(Box<SimpleExpression>),
 }
 
 pub enum AdditiveOp {
@@ -19,6 +19,15 @@ pub enum MultiplicativeOp {
     Div,
     Mod,
     And,
+}
+
+pub enum RelationalOp {
+    Less,
+    Bigger,
+    LessEq,
+    BiggerEq,
+    Eq,
+    UnEq,
 }
 
 #[derive(Clone)]
@@ -60,10 +69,21 @@ pub struct SubExpression {
     pub(crate) sub_expr: Option<Box<SubExpression>>,
 }
 
-pub struct Expression {
+pub struct SimpleExpression {
     pub(crate) term: Term,
     pub(crate) sub_expr: Option<SubExpression>,
     pub(crate) expr_type: String,
+}
+
+pub struct RelationalExpression {
+    pub(crate) first: SimpleExpression,
+    pub(crate) op: RelationalOp,
+    pub(crate) second: SimpleExpression,
+}
+
+pub enum Expression {
+    Simple(SimpleExpression),
+    Relational(RelationalExpression),
 }
 
 pub struct Compound {
@@ -149,9 +169,9 @@ impl fmt::Debug for Factor {
     }
 }
 
-impl fmt::Debug for Expression {
+impl fmt::Debug for SimpleExpression {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Expression")
+        f.debug_struct("SimpleExpression")
             .field("term", &self.term)
             .field("sub_expr", &self.sub_expr)
             .field("expr_type", &self.expr_type)
@@ -226,5 +246,37 @@ impl fmt::Debug for Identifier {
         f.debug_struct("Identifier")
             .field("name", &self.id)
             .finish()
+    }
+}
+
+impl fmt::Debug for RelationalOp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            RelationalOp::Bigger => write!(f, ">"),
+            RelationalOp::Less => write!(f, "<"),
+            RelationalOp::BiggerEq => write!(f, ">="),
+            RelationalOp::LessEq => write!(f, "<="),
+            RelationalOp::Eq => write!(f, "="),
+            RelationalOp::UnEq => write!(f, "<>"),
+        }
+    }
+}
+
+impl fmt::Debug for RelationalExpression {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("RelationalExpression")
+            .field("first", &self.first)
+            .field("op", &self.op)
+            .field("second", &self.second)
+            .finish()
+    }
+}
+
+impl fmt::Debug for Expression {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Expression::Simple(s) => write!(f, "Simple {:#?}", s),
+            Expression::Relational(r) => write!(f, "Rel {:#?}", r),
+        }
     }
 }
