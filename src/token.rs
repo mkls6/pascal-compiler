@@ -37,7 +37,10 @@ impl Token {
     pub fn is_expression_end(&self) -> bool {
         matches!(
             self.token,
-            TokenType::RBrace | TokenType::Semicolon | TokenType::EndKeyword
+            TokenType::RBrace
+                | TokenType::Semicolon
+                | TokenType::EndKeyword
+                | TokenType::ThenKeyword
         )
     }
 }
@@ -52,6 +55,9 @@ pub enum TokenType {
     VarKeyword,
     BeginKeyword,
     EndKeyword,
+    IfKeyword,
+    ElseKeyword,
+    ThenKeyword,
     PlusOp,
     MinusOp,
     AndOp,
@@ -105,6 +111,9 @@ impl fmt::Display for TokenType {
             TokenType::EndKeyword => write!(f, "'END' keyword"),
             TokenType::ProgramKeyword => write!(f, "'PROGRAM' keyword"),
             TokenType::VarKeyword => write!(f, "'VAR' keyword"),
+            TokenType::IfKeyword => write!(f, "'IF' keyword"),
+            TokenType::ElseKeyword => write!(f, "'ELSE' keyword"),
+            TokenType::ThenKeyword => write!(f, "'THEN' keyword"),
             TokenType::AssignOp => write!(f, "'Assign (:=)' operator"),
             TokenType::AndOp => write!(f, "AND logical operator"),
             TokenType::OrOp => write!(f, "OR logical operator"),

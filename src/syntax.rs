@@ -92,6 +92,7 @@ pub struct Compound {
 
 pub enum Statement {
     Simple(VarAssignment),
+    Cond(IfStatement),
 }
 
 pub struct VarDeclaration {
@@ -107,6 +108,12 @@ pub struct Program {
     pub(crate) identifier: Identifier,
     pub(crate) var_section: Option<VarSection>,
     pub(crate) compound: Compound,
+}
+
+pub struct IfStatement {
+    pub(crate) condition: Expression,
+    pub(crate) statement: Box<Statement>,
+    pub(crate) else_statement: Option<Box<Statement>>,
 }
 
 impl fmt::Debug for Program {
@@ -142,6 +149,10 @@ impl fmt::Debug for Statement {
             Statement::Simple(a) => f
                 .debug_struct("Simple Statement")
                 .field("value", &a)
+                .finish(),
+            Statement::Cond(c) => f
+                .debug_struct("Conditional statement")
+                .field("value", &c)
                 .finish(),
         }
     }
@@ -278,5 +289,15 @@ impl fmt::Debug for Expression {
             Expression::Simple(s) => write!(f, "Simple {:#?}", s),
             Expression::Relational(r) => write!(f, "Rel {:#?}", r),
         }
+    }
+}
+
+impl fmt::Debug for IfStatement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("IfStatement")
+            .field("condition", &self.condition)
+            .field("statement", &self.statement)
+            .field("else", &self.else_statement)
+            .finish()
     }
 }

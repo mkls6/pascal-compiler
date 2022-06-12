@@ -540,6 +540,10 @@ impl Parser {
                 token: TokenType::Identifier(_),
                 ..
             })) => Ok(Statement::Simple(self.parse_assignment()?)),
+            Some(Ok(Token {
+                token: TokenType::IfKeyword,
+                ..
+            })) => Ok(Statement::Cond(self.parse_conditional()?)),
             _ => Err(CompilerError::syntax(
                 "Illegal statement".into(),
                 self.current_pos,
@@ -570,6 +574,81 @@ impl Parser {
             }
             _ => Ok(Expression::Simple(first)),
         }
+    }
+
+    fn parse_if(&mut self) -> Result<(), CompilerError> {
+        let tok = self.current_token.take();
+        self.next_token();
+
+        match tok {
+            Some(Ok(Token {
+                token: TokenType::IfKeyword,
+                ..
+            })) => Ok(()),
+            Some(Ok(t)) => Err(CompilerError::syntax(
+                format!("Expected 'if', found {:?}", t),
+                t.pos,
+            )),
+            _ => Err(CompilerError::syntax(
+                "Unexpected EOF".into(),
+                self.current_pos,
+            )),
+        }
+    }
+
+    fn parse_then(&mut self) -> Result<(), CompilerError> {
+        let tok = self.current_token.take();
+        self.next_token();
+
+        match tok {
+            Some(Ok(Token {
+                token: TokenType::ThenKeyword,
+                ..
+            })) => Ok(()),
+            Some(Ok(t)) => Err(CompilerError::syntax(
+                format!("Expected 'Then', found {:?}", t),
+                t.pos,
+            )),
+            Some(Err(e)) => Err(e),
+            _ => Err(CompilerError::syntax(
+                "Unexpected EOF".into(),
+                self.current_pos,
+            )),
+        }
+    }
+
+    fn parse_else(&mut self) -> Result<Option<()>, CompilerError> {
+        match &self.current_token {
+            Some(Ok(Token {
+                token: TokenType::ElseKeyword,
+                ..
+            })) => {
+                self.next_token();
+                Ok(Some(()))
+            }
+            Some(Err(e)) => Err(e.clone()),
+            _ => Ok(None),
+        }
+    }
+
+    fn parse_conditional(&mut self) -> Result<IfStatement, CompilerError> {
+        self.parse_if()?;
+        let condition = self.parse_expr()?;
+        self.parse_then()?;
+        let statement = self.parse_statement()?;
+        let else_ = self.parse_else()?;
+
+        let else_statement = if else_.is_some() {
+            Some(Box::new(self.parse_statement()?))
+        } else {
+            None
+        };
+
+        Ok(IfStatement {
+            condition,
+            statement: Box::new(statement),
+            else_statement,
+        })
     }
 
     fn parse_compound(&mut self) -> Result<Compound, CompilerError> {
