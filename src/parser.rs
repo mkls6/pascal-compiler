@@ -544,6 +544,10 @@ impl Parser {
                 token: TokenType::IfKeyword,
                 ..
             })) => Ok(Statement::Cond(self.parse_conditional()?)),
+            Some(Ok(Token {
+                token: TokenType::WhileKeyword,
+                ..
+            })) => Ok(Statement::While(self.parse_while_loop()?)),
             _ => Err(CompilerError::syntax(
                 "Illegal statement".into(),
                 self.current_pos,
@@ -648,6 +652,60 @@ impl Parser {
             condition,
             statement: Box::new(statement),
             else_statement,
+        })
+    }
+
+    fn parse_while(&mut self) -> Result<(), CompilerError> {
+        let tok = self.current_token.take();
+        self.next_token();
+
+        match tok {
+            Some(Ok(Token {
+                token: TokenType::WhileKeyword,
+                ..
+            })) => Ok(()),
+            Some(Ok(t)) => Err(CompilerError::syntax(
+                format!("Expected 'While', found {:?}", t),
+                t.pos,
+            )),
+            Some(Err(e)) => Err(e),
+            _ => Err(CompilerError::syntax(
+                "Unexpected EOF".into(),
+                self.current_pos,
+            )),
+        }
+    }
+
+    fn parse_do(&mut self) -> Result<(), CompilerError> {
+        let tok = self.current_token.take();
+        self.next_token();
+
+        match tok {
+            Some(Ok(Token {
+                token: TokenType::DoKeyword,
+                ..
+            })) => Ok(()),
+            Some(Ok(t)) => Err(CompilerError::syntax(
+                format!("Expected 'Do', found {:?}", t),
+                t.pos,
+            )),
+            Some(Err(e)) => Err(e),
+            _ => Err(CompilerError::syntax(
+                "Unexpected EOF".into(),
+                self.current_pos,
+            )),
+        }
+    }
+
+    fn parse_while_loop(&mut self) -> Result<WhileLoop, CompilerError> {
+        self.parse_while()?;
+        let expr = self.parse_expr()?;
+        self.parse_do()?;
+        let statement = self.parse_statement()?;
+
+        Ok(WhileLoop {
+            condition: Box::new(expr),
+            statement: Box::new(statement),
         })
     }
 

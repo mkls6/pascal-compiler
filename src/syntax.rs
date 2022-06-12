@@ -93,6 +93,7 @@ pub struct Compound {
 pub enum Statement {
     Simple(VarAssignment),
     Cond(IfStatement),
+    While(WhileLoop),
 }
 
 pub struct VarDeclaration {
@@ -114,6 +115,20 @@ pub struct IfStatement {
     pub(crate) condition: Expression,
     pub(crate) statement: Box<Statement>,
     pub(crate) else_statement: Option<Box<Statement>>,
+}
+
+pub struct WhileLoop {
+    pub(crate) condition: Box<Expression>,
+    pub(crate) statement: Box<Statement>,
+}
+
+impl fmt::Debug for WhileLoop {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("WhileLoop")
+            .field("condition", &self.condition)
+            .field("statement", &self.statement)
+            .finish()
+    }
 }
 
 impl fmt::Debug for Program {
@@ -154,6 +169,7 @@ impl fmt::Debug for Statement {
                 .debug_struct("Conditional statement")
                 .field("value", &c)
                 .finish(),
+            Statement::While(w) => f.debug_struct("WhileLoop").field("value", &w).finish(),
         }
     }
 }

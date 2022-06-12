@@ -41,6 +41,7 @@ impl Token {
                 | TokenType::Semicolon
                 | TokenType::EndKeyword
                 | TokenType::ThenKeyword
+                | TokenType::DoKeyword
         )
     }
 }
@@ -58,6 +59,8 @@ pub enum TokenType {
     IfKeyword,
     ElseKeyword,
     ThenKeyword,
+    WhileKeyword,
+    DoKeyword,
     PlusOp,
     MinusOp,
     AndOp,
@@ -123,6 +126,8 @@ impl fmt::Display for TokenType {
             TokenType::Period => write!(f, "Period sign"),
             TokenType::LBrace => write!(f, "("),
             TokenType::RBrace => write!(f, ")"),
+            TokenType::WhileKeyword => write!(f, "WHILE keyword"),
+            TokenType::DoKeyword => write!(f, "DO keyword"),
             TokenType::StringLiteral(s) => write!(f, "String literal '{}'", s),
             TokenType::Real(r) => write!(f, "Real literal '{}'", r),
         }

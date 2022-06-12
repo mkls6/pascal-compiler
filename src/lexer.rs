@@ -104,6 +104,8 @@ impl Lexer {
                 "then" => Ok(Token::new(TokenType::ThenKeyword, pos)),
                 "or" => Ok(Token::new(TokenType::OrOp, pos)),
                 "and" => Ok(Token::new(TokenType::AndOp, pos)),
+                "while" => Ok(Token::new(TokenType::WhileKeyword, pos)),
+                "do" => Ok(Token::new(TokenType::DoKeyword, pos)),
                 "program" => Ok(Token::new(TokenType::ProgramKeyword, pos)),
                 "begin" => Ok(Token::new(TokenType::BeginKeyword, pos)),
                 "end" => Ok(Token::new(TokenType::EndKeyword, pos)),
