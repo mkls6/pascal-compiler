@@ -112,6 +112,19 @@ impl Analyzer {
         }
     }
 
+    pub fn check_expr(
+        &self,
+        e: &Expression,
+        type_name: &String,
+        pos: (usize, usize),
+    ) -> Result<(), CompilerError> {
+        match e {
+            Expression::Simple(e) if &e.expr_type == type_name => Ok(()),
+            Expression::Relational(_) if type_name.as_str() == "boolean" => Ok(()),
+            _ => Err(CompilerError::semantic("Expected boolean type".into(), pos)),
+        }
+    }
+
     pub fn check_assignment(&self, a: VarAssignment) -> Result<VarAssignment, CompilerError> {
         let var_id = &a.name;
         let var_type = self.find_identifier(var_id)?;

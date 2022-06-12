@@ -700,6 +700,8 @@ impl Parser {
     fn parse_while_loop(&mut self) -> Result<WhileLoop, CompilerError> {
         self.parse_while()?;
         let expr = self.parse_expr()?;
+        self.analyzer
+            .check_expr(&expr, &String::from("boolean"), self.current_pos)?;
         self.parse_do()?;
         let statement = self.parse_statement()?;
 
