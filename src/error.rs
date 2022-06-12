@@ -4,7 +4,6 @@ use std::fmt;
 pub enum ErrorType {
     Lexical,
     Syntax,
-    #[allow(dead_code)]
     Semantic,
 }
 

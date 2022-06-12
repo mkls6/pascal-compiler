@@ -1,7 +1,9 @@
+mod analyzer;
 mod error;
 mod io;
 mod lexer;
 mod parser;
+mod scope;
 mod syntax;
 mod token;
 

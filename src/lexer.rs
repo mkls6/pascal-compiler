@@ -99,6 +99,14 @@ impl Lexer {
             match s.to_lowercase().as_str() {
                 "div" => Ok(Token::new(TokenType::DivOp, pos)),
                 "mod" => Ok(Token::new(TokenType::ModOp, pos)),
+                "if" => Ok(Token::new(TokenType::IfKeyword, pos)),
+                "else" => Ok(Token::new(TokenType::ElseKeyword, pos)),
+                "then" => Ok(Token::new(TokenType::ThenKeyword, pos)),
+                "or" => Ok(Token::new(TokenType::OrOp, pos)),
+                "and" => Ok(Token::new(TokenType::AndOp, pos)),
+                "while" => Ok(Token::new(TokenType::WhileKeyword, pos)),
+                "do" => Ok(Token::new(TokenType::DoKeyword, pos)),
+                "type" => Ok(Token::new(TokenType::TypeKeyword, pos)),
                 "program" => Ok(Token::new(TokenType::ProgramKeyword, pos)),
                 "begin" => Ok(Token::new(TokenType::BeginKeyword, pos)),
                 "end" => Ok(Token::new(TokenType::EndKeyword, pos)),
@@ -145,6 +153,33 @@ impl Lexer {
                 '(' => Ok(Token::new(TokenType::LBrace, pos)),
                 ')' => Ok(Token::new(TokenType::RBrace, pos)),
                 ',' => Ok(Token::new(TokenType::Comma, pos)),
+                '=' => Ok(Token::new(TokenType::Eq, pos)),
+                '>' => {
+                    self.chars.next();
+
+                    match self.chars.current_char() {
+                        Some('=') => {
+                            self.chars.next();
+                            Ok(Token::new(TokenType::BiggerEq, pos))
+                        }
+                        _ => Ok(Token::new(TokenType::Bigger, pos)),
+                    }
+                }
+                '<' => {
+                    self.chars.next();
+
+                    match self.chars.current_char() {
+                        Some('=') => {
+                            self.chars.next();
+                            Ok(Token::new(TokenType::LessEq, pos))
+                        }
+                        Some('>') => {
+                            self.chars.next();
+                            Ok(Token::new(TokenType::UnEq, pos))
+                        }
+                        _ => Ok(Token::new(TokenType::Less, pos)),
+                    }
+                }
                 '\'' => {
                     // Read chars until string literal is closed
                     let literal: String = self
