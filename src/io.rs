@@ -70,13 +70,18 @@ impl Iterator for CharReader {
                 // Loop until non-empty line or EOF
                 loop {
                     match self.lines.by_ref().next() {
-                        Some(Ok(s)) if !s.is_empty() => {
-                            let mut c: Vec<char> = s.chars().collect();
-                            c.push('\n');
+                        Some(Ok(s)) => {
+                            if !s.is_empty() {
+                                let mut c: Vec<char> = s.chars().collect();
+                                c.push('\n');
 
-                            self.current_char = Some(c[0]);
-                            self.chars = Some(c);
-                            break;
+                                self.current_char = Some(c[0]);
+                                self.chars = Some(c);
+                                break;
+                            } else {
+                                self.line_num += 1;
+                                self.col_num = 0;
+                            }
                         }
                         None => {
                             self.chars = None;
