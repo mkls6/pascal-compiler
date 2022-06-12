@@ -947,6 +947,14 @@ impl Parser {
                     | Token {
                         token: TokenType::BeginKeyword,
                         ..
+                    }
+                    | Token {
+                        token: TokenType::IfKeyword,
+                        ..
+                    }
+                    | Token {
+                        token: TokenType::WhileKeyword,
+                        ..
                     } => {
                         return;
                     }
