@@ -107,6 +107,7 @@ impl Analyzer {
             Ok(factor_type_str)
         } else {
             let sub_term_type = self.get_sub_term_type(sub_term.sub_term.as_ref().unwrap())?;
+            // TODO: pass actual position
             self.merge_types(&factor_type_str, &sub_term_type, (0, 0), false)
         }
     }

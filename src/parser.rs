@@ -103,7 +103,7 @@ impl Parser {
 
         let term_type = self
             .analyzer
-            .merge_types(&fact_type_str, &sub_term_type, (0, 0), false)?;
+            .merge_types(&fact_type_str, &sub_term_type, self.current_pos, false)?;
 
         let term = Term {
             factor,
@@ -126,7 +126,6 @@ impl Parser {
 
         match &self.current_token {
             Some(Ok(t)) if t.is_mul_op() => {
-                let pos = t.pos;
                 let op = self.parse_multiplicative_op()?;
                 let factor = self.parse_factor()?;
                 let sub_term_res = self.parse_sub_term()?;
@@ -148,7 +147,7 @@ impl Parser {
 
                 let res =
                     self.analyzer
-                        .merge_types(&fact_type_str, &sub_term_type, (0, 0), false)?;
+                        .merge_types(&fact_type_str, &sub_term_type, self.current_pos, false)?;
                 // let sub_term_type = self.analyzer.get_subterm_type(&sub_term)?;
 
                 Ok(Some(SubTerm {
@@ -496,7 +495,7 @@ impl Parser {
 
                 let sub_expr_type =
                     self.analyzer
-                        .merge_types(term_type, &sub_expr_type, (0, 0), false)?;
+                        .merge_types(term_type, &sub_expr_type, self.current_pos, false)?;
 
                 Ok(Some(SubExpression {
                     op,
@@ -625,9 +624,11 @@ impl Parser {
             sub_expr_type = String::new();
         }
 
+        let pos = self.current_pos;
+
         let expr_type =
             self.analyzer
-                .merge_types(&term.term_type, &sub_expr_type, (0, 0), false)?;
+                .merge_types(&term.term_type, &sub_expr_type, pos, false)?;
 
         let expr = Expression {
             term,
