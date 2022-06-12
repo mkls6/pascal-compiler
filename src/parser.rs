@@ -4,6 +4,7 @@ use crate::lexer::Lexer;
 use crate::syntax::*;
 use crate::token::{Token, TokenType};
 use std::iter::Peekable;
+use crate::scope::Usage;
 
 pub struct Parser {
     lexer: Peekable<Lexer>,
@@ -50,7 +51,11 @@ impl Parser {
                 Token {
                     token: TokenType::Identifier(_),
                     ..
-                } => Ok(Factor::Identifier(Identifier { id: token.clone() })),
+                } => {
+                    let id = Identifier { id: token.clone() };
+                    self.analyzer.find_identifier(&id, &Usage::Variable)?;
+                    Ok(Factor::Identifier(Identifier { id: token.clone() }))
+                },
                 Token {
                     token: TokenType::LBrace,
                     ..
@@ -371,6 +376,7 @@ impl Parser {
                 let compound = self.parse_compound()?;
 
                 self.parse_period()?;
+                self.analyzer.leave_scope();
 
                 Ok(Program {
                     identifier: id,

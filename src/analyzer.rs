@@ -1,9 +1,6 @@
 use crate::error::CompilerError;
 use crate::syntax::*;
 use crate::scope::{Scope, Usage};
-use crate::token::{Token, TokenType};
-
-struct Type {}
 
 pub struct Analyzer {
     scopes: Vec<Scope>
@@ -46,12 +43,12 @@ impl Analyzer {
             let cur_scope = scopes.next();
 
             if cur_scope.is_none() {
-                break Err(CompilerError::semantic(format!("Unknown identifier {:?}", id), id.id.pos))
+                break Err(CompilerError::semantic(format!("Unknown identifier {:?}", id.get_id()), id.id.pos))
             } else {
                 match cur_scope.unwrap().get(id.get_id()) {
                     Some(u) if u == usg => break Ok(()),
                     Some(u) => break Err(CompilerError::semantic(format!("Identifier<{:?}> found, expected <{:?}>", u, usg), id.id.pos)),
-                    None => break Err(CompilerError::semantic("Unknown type identifier".into(), id.id.pos))
+                    None => continue
                 }
             }
         }
