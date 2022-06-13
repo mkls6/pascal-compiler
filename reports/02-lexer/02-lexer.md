@@ -198,9 +198,9 @@ impl Lexer {
 
 Пример - обработка идентификаторов и ключевых слов:
 ```rust
-fn maybe_keyword(&mut self) -> Result<Token, LexicalError> {
+fn maybe_keyword(&mut self) -> Result<Token, CompilerError> {
     if self.chars.by_ref().current_char().is_none() {
-        Ok(Token::EOF)
+        Ok(Token::new(TokenType::Eof, self.chars.position()))
     } else {
         let mut s = String::new();
         s.push(self.chars.by_ref().current_char().unwrap());
@@ -212,16 +212,24 @@ fn maybe_keyword(&mut self) -> Result<Token, LexicalError> {
             }
         }
 
+        let pos = self.chars.position();
+
         match s.to_lowercase().as_str() {
-            "div" => Ok(Token::DivOp),
-            "mod" => Ok(Token::ModOp),
-            "program" => Ok(Token::ProgramKeyword),
-            "begin" => Ok(Token::BeginKeyword),
-            "end" => Ok(Token::EndKeyword),
-            "integer" => Ok(Token::IntegerKeyword),
-            "real" => Ok(Token::RealKeyword),
-            "var" => Ok(Token::VarKeyword),
-            _ => Ok(Token::Identifier(s)),
+            "div" => Ok(Token::new(TokenType::DivOp, pos)),
+            "mod" => Ok(Token::new(TokenType::ModOp, pos)),
+            "if" => Ok(Token::new(TokenType::IfKeyword, pos)),
+            "else" => Ok(Token::new(TokenType::ElseKeyword, pos)),
+            "then" => Ok(Token::new(TokenType::ThenKeyword, pos)),
+            "or" => Ok(Token::new(TokenType::OrOp, pos)),
+            "and" => Ok(Token::new(TokenType::AndOp, pos)),
+            "while" => Ok(Token::new(TokenType::WhileKeyword, pos)),
+            "do" => Ok(Token::new(TokenType::DoKeyword, pos)),
+            "type" => Ok(Token::new(TokenType::TypeKeyword, pos)),
+            "program" => Ok(Token::new(TokenType::ProgramKeyword, pos)),
+            "begin" => Ok(Token::new(TokenType::BeginKeyword, pos)),
+            "end" => Ok(Token::new(TokenType::EndKeyword, pos)),
+            "var" => Ok(Token::new(TokenType::VarKeyword, pos)),
+            _ => Ok(Token::new(TokenType::Identifier(s), pos)),
         }
     }
 }
