@@ -91,7 +91,7 @@ impl Lexer {
 Для обхода токенов реализован trait `Iterator`:
 ```rust
 impl Iterator for Lexer {
-    type Item = Result<Token, LexicalError>;
+    type Item = Result<Token, CompilerError>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.skip_ws();
@@ -103,11 +103,14 @@ impl Iterator for Lexer {
                 _ if ch.is_alphanumeric() => self.maybe_keyword(),
                 _ => self.symbol(),
             },
-            None => Ok(Token::EOF),
+            None => Ok(Token::new(TokenType::Eof, self.chars.position())),
         };
 
         match token {
-            Ok(Token::EOF) => None,
+            Ok(Token {
+                   token: TokenType::Eof,
+                   ..
+               }) => None,
             _ => Some(token),
         }
     }
@@ -118,6 +121,18 @@ impl Iterator for Lexer {
 `CharReader`, который тоже постепенно считывает сам исходный файл.
 В зависимости от символа запускаем обработчик конкретной лексемы или группы лексем.
 
+Были реализованы следующие функции:
+```rust
+fn number(&mut self) -> Result<Token, CompilerError> {}
+fn maybe_keyword(&mut self) -> Result<Token, CompilerError> {}
+fn operator(&mut self) -> Result<Token, CompilerError> {}
+fn symbol(&mut self) -> Result<Token, CompilerError> {}
+```
+
+Основная идея - по определённому символу (паре символов, как в случае с :=)
+переходим в функцию-обработчик, которая возвращает готовый токен и обновляет состояние
+структуры.
+
 Обработка чисел запускается при выявлении цифры в начале очередной выделяемой лексемы.
 Если в процессе была найдена точка, то пытаемся обработать последовательность
 как вещественное число, иначе - как целочисленное. Если при обработке
@@ -125,36 +140,23 @@ impl Iterator for Lexer {
 передаётся как результат обработки. Если числовой литерал корректен,
 то возвращается соответствующий токен.
 
+
 Обработка чисел:
 ```rust
 impl Lexer {
     …
-    fn number(&mut self) -> Result<Token, LexicalError> {
+    fn number(&mut self) -> Result<Token, CompilerError> {
         let mut num = String::new();
         let mut is_real = false;
 
         loop {
             match self.chars.by_ref().current_char() {
-                Some(ch) if ch.is_digit(10) => num.push(ch),
+                Some(ch) if ch.is_digit(10) || ch.is_alphanumeric() => num.push(ch),
                 Some(ch) if ch == '.' => {
                     num.push(ch);
                     is_real = true;
                 }
                 Some(ch) if ch.is_whitespace() => break,
-                Some(ch) if ch.is_alphanumeric() => {
-                    // Consume everything until whitespace or EOF
-                    num.push(ch);
-
-                    while let Some(ch) = self.chars.next() {
-                        if ch.is_whitespace() {
-                            break;
-                        } else {
-                            num.push(ch);
-                        }
-
-                        break;
-                    }
-                }
                 _ => break,
             }
 
@@ -165,13 +167,12 @@ impl Lexer {
             let parsed = num.parse::<f32>();
 
             match parsed {
-                Ok(f) => Ok(Token::Real(f)),
+                Ok(f) => Ok(Token::new(TokenType::Real(f), self.chars.position())),
                 _ => {
                     let pos = self.chars.position();
-                    Err(LexicalError::new(
-                        String::from(format!("Invalid real literal {}", num)),
-                        pos.0,
-                        pos.1,
+                    Err(CompilerError::lexical(
+                        format!("Invalid real literal {}", num),
+                        pos,
                     ))
                 }
             }
@@ -179,14 +180,13 @@ impl Lexer {
             let parsed = num.parse::<i32>();
 
             match parsed {
-                Ok(i) => Ok(Token::Integer(i)),
+                Ok(i) => Ok(Token::new(TokenType::Integer(i), self.chars.position())),
                 _ => {
                     let pos = self.chars.position();
 
-                    Err(LexicalError::new(
-                        String::from(format!("Invalid int literal {}", num)),
-                        pos.0,
-                        pos.1,
+                    Err(CompilerError::lexical(
+                        format!("Invalid int literal {}", num),
+                        pos,
                     ))
                 }
             }
@@ -267,3 +267,8 @@ end.
 
 Как видим, emoji не поддерживаются, также у нас присутствует
 неправильный литерал (или идентификатор, начинающийся с цифр).
+
+В Rust char соответствует 'Unicode scalar value', поэтому мы не
+можем (на самом деле можем, но не стоит) обращаться по номеру
+символа в строках. Зато по умолчанию поддержка основных
+наборов из стандарта Unicode.
